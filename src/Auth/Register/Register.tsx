@@ -51,6 +51,7 @@ export default function Register() {
       const res = await axios.post("/api/auth/signup", user);
 
       setMessage(res.data.message);
+      toast.success("Registration successful! OTP sent to email.");
       setShowOtpModal(true); // ⭐ Open OTP modal
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed");

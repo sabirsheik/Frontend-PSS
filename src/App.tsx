@@ -7,7 +7,7 @@ import { Home } from "./Pages/Home";
 import { AdminDashboard } from "./Dashboards/Admin/AdminDashboard";
 
 import { useAuth } from "./context/auth";
-import ProtectedRoute from "./context/Secure/ProctedRoute";
+import ProtectedRoute from "./context/Secure/ProctectedRoute";
 import DashboardRedirect from "./context/Secure/DashboradRedirect";
 
 export const App = () => {

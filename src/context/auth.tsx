@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import axios from '../api/axios';
+import axios from "../api/axios";
 const AuthContext = createContext<any>(null);
-
-const Api = import.meta.env.VITE_API_URL;
 const USER_URL = "/api/auth/user";
 const LOGOUT_URL = "/api/auth/logout";
 
@@ -14,14 +12,12 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // AUTH CHECK (COOKIE BASED)
-  const useAuthentication = async () => {
+  const fetchUser = async () => {
     try {
       setIsLoading(true);
-
-      const response = await axios.get(`${USER_URL}`, {
+      const response = await axios.get(USER_URL, {
         withCredentials: true,
       });
-
       if (response.status === 200) {
         setUser(response.data.userData);
       } else {
@@ -51,13 +47,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // FIRST LOAD AUTH CHECK
-  useEffect(() => {
-    // useAuthentication();
-  }, []);
-
   // LOGIN STATUS
   const isLoggedIn = !!user;
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -66,6 +60,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isLoading,
         user,
         LogoutUser,
+        fetchUser
       }}
     >
       {children}
