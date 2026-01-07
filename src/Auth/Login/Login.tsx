@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function Login() {
   const [user, setUser] = useState({ email: "", password: "" });
@@ -41,9 +42,14 @@ export default function Login() {
         email: user.email,
         password: user.password,
       });
-      setMessage(res.data.message || "OTP sent to your email");
+      toast.success(res.data.message );
       setUser({ email: "", password: "" });
-      navigate("/dashboard");
+      // navigate("/dashboard");
+        if (res.data.user.role === "admin") {
+        navigate("/auth/admin");
+      } else {
+        navigate("/auth/user");
+      }
     } catch (err: any) {
       setError(
         err.response?.data?.message || "Registration failed. Try again."
@@ -109,7 +115,7 @@ export default function Login() {
               disabled={loading}
               className="w-full mt-4 bg-green-700 hover:bg-green-800 text-white"
             >
-              {loading ? "Registering..." : "Sign Up"}
+              {loading ? "Login..." : "Login"}
             </Button>
 
             <p className="text-sm text-muted-foreground text-center">

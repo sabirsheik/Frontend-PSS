@@ -1,14 +1,9 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import axios from "axios";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import axios from '../api/axios';
 const AuthContext = createContext<any>(null);
 
 const Api = import.meta.env.VITE_API_URL;
-const USER_URL = "/users/user";
+const USER_URL = "/api/auth/user";
 const LOGOUT_URL = "/api/auth/logout";
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -23,16 +18,14 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsLoading(true);
 
-      const response = await fetch(`${Api}${USER_URL}`, {
-        method: "GET",
-        credentials: "include", // cookie automatically send hogi
+      const response = await axios.get(`${USER_URL}`, {
+        withCredentials: true,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.userData); // user mila → logged in
+      if (response.status === 200) {
+        setUser(response.data.userData);
       } else {
-        setUser(null); // not logged in
+        setUser(undefined);
       }
     } catch (error) {
       setUser(null);
@@ -43,24 +36,24 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   //  LOGOUT
   const LogoutUser = async () => {
-  try {
-    await axios.post(
-      `${Api}${LOGOUT_URL}`,
-      {},
-      {
-        withCredentials: true, //cookies send hongi
-      }
-    );
-  } catch (error) {
-    console.log("Logout error", error);
-  } finally {
-    setUser(null);
-  }
-};
+    try {
+      await axios.post(
+        `${LOGOUT_URL}`,
+        {},
+        {
+          withCredentials: true, //cookies send hongi
+        }
+      );
+    } catch (error) {
+      console.log("Logout error", error);
+    } finally {
+      setUser(null);
+    }
+  };
 
   // FIRST LOAD AUTH CHECK
   useEffect(() => {
-    useAuthentication();
+    // useAuthentication();
   }, []);
 
   // LOGIN STATUS

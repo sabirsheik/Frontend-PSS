@@ -1,7 +1,6 @@
-// DashboardRedirect Component
 import { useAuth } from "../auth";
 import { Navigate } from "react-router-dom";
-// import PageLoader from "../Components/Loader/PageLoader";
+
 
 const DashboardRedirect = () => {
   const { user, isLoggedIn } = useAuth();
@@ -12,7 +11,7 @@ const DashboardRedirect = () => {
       return <Navigate to="/admin" replace />;
     }
     if (user?.role === "analyst") {
-      return <Navigate to="/analyst" replace />; // Manager goes to admin layout but sees filtered menu
+      return <Navigate to="/analyst" replace />; 
     }
   }
 
