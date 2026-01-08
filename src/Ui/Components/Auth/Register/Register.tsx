@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axios from "../../api/axios";
-import { useNavigate, Link } from "react-router-dom";
+import axios from "../../../../Hook/api/axios";
+import { useNavigate, Link, NavLink } from "react-router-dom";
 
 import {
   Card,
@@ -52,7 +52,7 @@ export default function Register() {
 
       setMessage(res.data.message);
       toast.success("Registration successful! OTP sent to email.");
-      setShowOtpModal(true); // ⭐ Open OTP modal
+      setShowOtpModal(true); // Open OTP modal
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {
@@ -70,10 +70,10 @@ export default function Register() {
         email: user.email,
         otp,
       });
-
-      navigate("/login"); // ⭐ redirect after verify
+      navigate("/login"); // redirect after verify
     } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid OTP");
+      setError(err.message || "Invalid OTP");
+      toast.error(err.message || "Invalid OTP");
     } finally {
       setOtpLoading(false);
     }
@@ -82,7 +82,7 @@ export default function Register() {
   return (
     <>
       {/* ================= REGISTER CARD ================= */}
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white px-4">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-green-50 to-white px-4">
         <Card className="w-full max-w-md shadow-xl border">
           <CardHeader className="space-y-2 text-center">
             <CardTitle className="text-2xl font-bold text-green-700">
@@ -157,6 +157,11 @@ export default function Register() {
       {showOtpModal && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
           <div className="bg-white rounded-xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in">
+            <div className="container">
+              <NavLink to="/login" className="text-gray-500 hover:text-gray-700 flex justify-end text-lg font-bold">
+                ×
+              </NavLink>
+            </div>
             <h2 className="text-xl font-semibold text-center text-green-700">
               Verify OTP
             </h2>

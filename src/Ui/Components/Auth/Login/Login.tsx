@@ -1,8 +1,7 @@
 import { useState } from "react";
-import axios from "../../api/axios"; // axios instance (withCredentials = true)
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/auth";
-
+import axios from "../../../../Hook/api/axios"; // axios instance (withCredentials = true)
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../../context/auth";
 import {
   Card,
   CardHeader,
@@ -14,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link } from "react-router-dom";
 
 export default function Login() {
   const [user, setUser] = useState({ email: "", password: "" });
@@ -22,7 +20,7 @@ export default function Login() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { useAuthentication } = useAuth();
+  const { fetchUser } = useAuth();
 
   const handleInput = (e: { target: { name: any; value: any } }) => {
     const name = e.target.name;
@@ -45,11 +43,12 @@ export default function Login() {
       });
       setMessage(res.data.message || "OTP sent to your email");
       setUser({ email: "", password: "" });
-      useAuthentication();
+      fetchUser();
       navigate("/dashboard");
     } catch (err: any) {
+      console.log(err)
       setError(
-        err.response?.data?.message || "Registration failed. Try again."
+        err.message || "Registration failed. Try again."
       );
     } finally {
       setLoading(false);
@@ -59,7 +58,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-muted px-4">
       <Card className="w-full max-w-md shadow-md">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-2xl font-semibold">
+          <CardTitle className="text-2xl text-green-700 font-semibold">
             Login to Your Account
           </CardTitle>
           <CardDescription>
@@ -114,19 +113,22 @@ export default function Login() {
               {loading ? "Login..." : "Login"}
             </Button>
 
-           <div className="flex flex-col items-center gap-2">
-             <p className="text-sm text-muted-foreground text-center">
-              Don't have an account? &nbsp;
-              <Link to="/register" className="underline text-green-600">
-                Register here
-              </Link>
-            </p>
-            <p>
-              <Link to="/forgot-password" className="underline text-sm text-green-600">
-                Forget Password
-              </Link>
-            </p>
-           </div>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm text-muted-foreground text-center">
+                Don't have an account? &nbsp;
+                <NavLink to="/register" className="underline text-green-600">
+                  Register here
+                </NavLink>
+              </p>
+              <p>
+                <NavLink
+                  to="/forget-password"
+                  className="underline text-sm text-green-600"
+                >
+                  Forget Password
+                </NavLink>
+              </p>
+            </div>
           </CardFooter>
         </form>
       </Card>

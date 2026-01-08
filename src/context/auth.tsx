@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import axios from "../api/axios";
+import axios from "../Hook/api/axios";
 const AuthContext = createContext<any>(null);
 const USER_URL = "/api/auth/user";
 const LOGOUT_URL = "/api/auth/logout";
