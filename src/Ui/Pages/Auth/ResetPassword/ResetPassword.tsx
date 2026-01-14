@@ -73,7 +73,7 @@ const ResetPassword = () => {
 
       toast.success("Password reset successful");
       navigate("/login");
-    } catch (err: any) {
+    } catch (err: String | any) {
       const errorMessage = err.message || "Reset failed";
       toast.error(errorMessage);
 

@@ -60,7 +60,7 @@ export default function Login() {
       setFormData({ email: "", password: "" });
       fetchUser();
       navigate("/dashboard");
-    } catch (err: any) {
+    } catch (err: String | any) {
       // Handle backend validation errors
       if (err.message) {
         toast.error(err.message);

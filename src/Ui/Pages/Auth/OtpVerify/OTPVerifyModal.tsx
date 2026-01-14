@@ -55,7 +55,7 @@ const OTPVerifyModal = ({ email, onClose }: Props) => {
 
       onClose();
       navigate("/reset-password", { state: { email } });
-    } catch (err: any) {
+    } catch (err: String | any) {
       toast.error(err.response?.data?.message || "Invalid OTP");
     } finally {
       setLoading(false);

@@ -83,7 +83,7 @@ export default function Register() {
       const res = await signupMutation.mutateAsync(formData);
       toast.success(res.message || "Registration successful! OTP sent to email.");
       setShowOtpModal(true);
-    } catch (err: any) {
+    } catch (err: String | any) {
       const errorMessage = err.message || "Registration failed";
       toast.error(errorMessage);
 

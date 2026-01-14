@@ -32,7 +32,7 @@ export default function ForgetPasswordModal() {
 
       // Navigate to reset password with email
       navigate("/reset-password", { state: { email } });
-    } catch (err: any) {
+    } catch (err: String | any) {
       const errorMessage = err.message || "Failed to send OTP";
       setError(errorMessage);
       toast.error(errorMessage);

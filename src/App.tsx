@@ -1,15 +1,15 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 
-import Login from "./Ui/Components/Auth/Login/Login";
-import Register from "./Ui/Components/Auth/Register/Register";
+import Login from "./Ui/Pages/Auth/Login/Login";
+import Register from "./Ui/Pages/Auth/Register/Register";
 import { Analyst } from "./Dashboards/Analyst/Analyst";
 import { AdminDashboard } from "./Dashboards/Admin/AdminDashboard";
 
 import { useAuth } from "./context/auth";
 import ProtectedRoute from "./context/Secure/ProctectedRoute";
 import DashboardRedirect from "./context/Secure/DashboradRedirect";
-import ForgetPasswordModal from "./Ui/Components/Auth/ForgetPasswordModal/ForgetPasswordModal";
-import ResetPassword from "./Ui/Components/Auth/ResetPassword/ResetPassword";
+import ForgetPasswordModal from "./Ui/Pages/Auth/ForgetPasswordModal/ForgetPasswordModal";
+import ResetPassword from "./Ui/Pages/Auth/ResetPassword/ResetPassword";
 import NOX from "./Ui/Pages/NOX/NOX";
 import Header from "./Ui/Components/Header/header";
 
