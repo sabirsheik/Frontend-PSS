@@ -1,8 +1,8 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../auth";
+import { useUser } from "../../Hook/Auth/useAuth";
 
 const DashboardRedirect = () => {
-  const { user, isLoading } = useAuth();
+  const { data: user, isLoading } = useUser();
 
   if (isLoading) return null;
 

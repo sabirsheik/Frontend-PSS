@@ -5,7 +5,7 @@ import Register from "./Ui/Pages/Auth/Register/Register";
 import { Analyst } from "./Dashboards/Analyst/Analyst";
 import { AdminDashboard } from "./Dashboards/Admin/AdminDashboard";
 
-import { useAuth } from "./context/auth";
+import { useUser } from "./Hook/Auth/useAuth";
 import ProtectedRoute from "./context/Secure/ProctectedRoute";
 import DashboardRedirect from "./context/Secure/DashboradRedirect";
 import ForgetPasswordModal from "./Ui/Pages/Auth/ForgetPasswordModal/ForgetPasswordModal";
@@ -19,7 +19,8 @@ import FIU from "./Ui/Pages/FIU/FIU";
 import Link from "./Ui/Pages/Links/Link";
 
 export const App = () => {
-  const { isLoggedIn } = useAuth();
+  const { data: user } = useUser();
+  const isLoggedIn = !!user;
 
   return (
     <>

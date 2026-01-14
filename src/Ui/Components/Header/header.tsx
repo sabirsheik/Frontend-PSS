@@ -1,10 +1,22 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../../../context/auth";
+import { useUser, useLogout } from "../../../Hook/Auth/useAuth";
 import { Menu, X, Link as LinkIcon, FileText, Database, Camera, Search, File, Folder } from "lucide-react";
 
 const Header: React.FC = () => {
-  const { user, isLoggedIn, LogoutUser } = useAuth();
+  const { data: user, refetch: fetchUser } = useUser();
+  const logoutMutation = useLogout();
+  const isLoggedIn = !!user;
+
+  const LogoutUser = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+    } catch (error) {
+      console.log("Logout error", error);
+    } finally {
+      fetchUser();
+    }
+  };
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [

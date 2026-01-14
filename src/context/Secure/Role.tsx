@@ -1,9 +1,10 @@
-import { useAuth } from "../auth";
+import { useUser } from "../../Hook/Auth/useAuth";
 import { Navigate } from "react-router-dom";
 
 
 const DashboardRedirect = () => {
-  const { user, isLoggedIn } = useAuth();
+  const { data: user } = useUser();
+  const isLoggedIn = !!user;
 
   // Redirect rules
   if (isLoggedIn) {

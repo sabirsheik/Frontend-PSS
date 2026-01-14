@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../../../../context/auth";
+import { useUser } from "../../../../Hook/Auth/useAuth";
 import { useLogin } from "../../../../Hook/Auth/useAuth";
 import { toast } from "sonner";
 import {
@@ -19,7 +19,7 @@ export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const navigate = useNavigate();
-  const { fetchUser } = useAuth();
+  const { refetch: fetchUser } = useUser();
   const loginMutation = useLogin();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,8 +1,9 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../auth";
+import { useUser } from "../../Hook/Auth/useAuth";
 
 const ProtectedRoute = ({ role }: { role: "user" | "admin" }) => {
-  const { isLoggedIn, isLoading, user } = useAuth();
+  const { data: user, isLoading } = useUser();
+  const isLoggedIn = !!user;
 
   if (isLoading) return null;
   if (!isLoggedIn) {
