@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
-import { useSignup } from "../../../../Hook/Auth/useSignup";
-import { useVerifyOtp } from "../../../../Hook/Auth/useVerifyOtp";
+import { useSignup } from "../../../../Hook/Auth/useAuth";
+import { useVerifyOtp } from "../../../../Hook/Auth/useAuth";
 import { toast } from "sonner";
 import {
   Card,

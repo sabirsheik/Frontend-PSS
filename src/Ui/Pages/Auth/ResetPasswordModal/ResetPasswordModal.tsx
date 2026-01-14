@@ -1,12 +1,17 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useResetPassword } from "../../../../Hook/Auth/useAuth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const ResetPassword = () => {
+interface Props {
+  email: string;
+  onClose: () => void;
+}
+
+const ResetPasswordModal = ({ email, onClose }: Props) => {
   const [formData, setFormData] = useState({
     newPassword: "",
     confirmPassword: "",
@@ -17,10 +22,7 @@ const ResetPassword = () => {
   }>({});
 
   const navigate = useNavigate();
-  const location = useLocation();
   const resetPasswordMutation = useResetPassword();
-
-  const email = location.state?.email;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -63,6 +65,7 @@ const ResetPassword = () => {
       });
 
       toast.success("Password reset successful");
+      onClose();
       navigate("/login");
     } catch (err: String | any) {
       const errorMessage = err.message || "Reset failed";
@@ -75,20 +78,17 @@ const ResetPassword = () => {
     }
   };
 
-  if (!email) {
-    navigate("/login");
-    return null;
-  }
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-purple-50 via-white to-blue-50 px-4 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-linear-to-br from-purple-200 to-blue-200 rounded-full opacity-20 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-linear-to-br from-blue-200 to-purple-200 rounded-full opacity-20 blur-3xl"></div>
-      </div>
-
-      <div className="w-full max-w-md p-8 bg-white/80 backdrop-blur-xl rounded-lg shadow-2xl border-0 relative z-10">
-        <h2 className="text-xl font-semibold text-center mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
+      <div className="w-full max-w-sm bg-white p-6 rounded-lg shadow relative">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-3 text-xl font-bold"
+        >
+          ×
+        </button>
+        <h2 className="text-lg font-semibold text-center mb-2">
           Reset Password
         </h2>
 
@@ -99,7 +99,7 @@ const ResetPassword = () => {
               id="email"
               type="email"
               placeholder="Email"
-              className="w-full px-4 py-2 border rounded-lg bg-white/50 backdrop-blur-sm"
+              className="w-full px-4 py-2 border rounded"
               value={email}
               readOnly
             />
@@ -112,7 +112,7 @@ const ResetPassword = () => {
               name="newPassword"
               type="password"
               placeholder="New Password"
-              className="w-full px-4 py-2 border rounded-lg bg-white/50 backdrop-blur-sm"
+              className="w-full px-4 py-2 border rounded"
               value={formData.newPassword}
               onChange={handleInputChange}
             />
@@ -128,7 +128,7 @@ const ResetPassword = () => {
               name="confirmPassword"
               type="password"
               placeholder="Confirm Password"
-              className="w-full px-4 py-2 border rounded-lg bg-white/50 backdrop-blur-sm"
+              className="w-full px-4 py-2 border rounded"
               value={formData.confirmPassword}
               onChange={handleInputChange}
             />
@@ -139,7 +139,7 @@ const ResetPassword = () => {
 
           <Button
             disabled={resetPasswordMutation.isPending}
-            className={`w-full py-2 text-white rounded-lg ${
+            className={`w-full py-2 text-white rounded ${
               resetPasswordMutation.isPending ? "bg-green-600" : "bg-green-700 hover:bg-green-800"
             }`}
           >
@@ -150,4 +150,5 @@ const ResetPassword = () => {
     </div>
   );
 };
-export default ResetPassword;
+
+export default ResetPasswordModal;

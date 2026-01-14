@@ -9,7 +9,6 @@ import { useAuth } from "./context/auth";
 import ProtectedRoute from "./context/Secure/ProctectedRoute";
 import DashboardRedirect from "./context/Secure/DashboradRedirect";
 import ForgetPasswordModal from "./Ui/Pages/Auth/ForgetPasswordModal/ForgetPasswordModal";
-import ResetPassword from "./Ui/Pages/Auth/ResetPassword/ResetPassword";
 import NOX from "./Ui/Pages/NOX/NOX";
 import Header from "./Ui/Components/Header/header";
 
@@ -27,7 +26,6 @@ export const App = () => {
       />
       <Route path="/register" element={<Register />} />
       <Route path="/forget-password" element={<ForgetPasswordModal />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* DASHBOARD REDIRECT */}
       <Route path="/dashboard" element={<DashboardRedirect />} />

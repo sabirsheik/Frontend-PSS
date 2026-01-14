@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from "react";
-import { useUser } from "../Hook/Auth/useUser";
-import { useLogout } from "../Hook/Auth/useLogout";
+import { useUser } from "../Hook/Auth/useAuth";
+import { useLogout } from "../Hook/Auth/useAuth";
 
 const AuthContext = createContext<any>(null);
 

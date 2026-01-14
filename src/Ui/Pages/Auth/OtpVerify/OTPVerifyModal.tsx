@@ -1,20 +1,21 @@
 import { useEffect, useState } from "react";
-import axios from "../../../../Hook/api/axios";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useVerifyOtp } from "../../../../Hook/Auth/useAuth";
+import ResetPasswordModal from "../ResetPasswordModal/ResetPasswordModal";
 
 interface Props {
   email: string;
   onClose: () => void;
+  onVerified: () => void;
 }
 
-const OTPVerifyModal = ({ email, onClose }: Props) => {
+const OTPVerifyModal = ({ email, onClose, onVerified }: Props) => {
   const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(300); 
+  const [showReset, setShowReset] = useState(false); 
 
-  const navigate = useNavigate();
+  const verifyOtpMutation = useVerifyOtp();
 
   // Countdown Timer
   useEffect(() => {
@@ -39,31 +40,26 @@ const OTPVerifyModal = ({ email, onClose }: Props) => {
       return;
     }
 
-    try {
-      setLoading(true);
-      console.log(email, otp);
-
-      const response = await axios.post("/api/auth/verifyOtp", {
-        email,
-        otp,
-      });
-      if (response.status === 200){
-        toast.success("OTP verified");
-      }else{
-        toast.error("Invalid OTP");
+    verifyOtpMutation.mutate(
+      { email, otp },
+      {
+        onSuccess: () => {
+          toast.success("OTP verified");
+          onVerified();
+        },
+        onError: (error: any) => {
+          toast.error(error.response?.data?.message || "Invalid OTP");
+        },
       }
-
-      onClose();
-      navigate("/reset-password", { state: { email } });
-    } catch (err: String | any) {
-      toast.error(err.response?.data?.message || "Invalid OTP");
-    } finally {
-      setLoading(false);
-    }
+    );
   };
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
+
+  if (showReset) {
+    return <ResetPasswordModal email={email} onClose={() => setShowReset(false)} />;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
@@ -91,16 +87,17 @@ const OTPVerifyModal = ({ email, onClose }: Props) => {
             onChange={(e) => setOtp(e.target.value)}
           />
           <Button
-            disabled={loading}
+            disabled={verifyOtpMutation.isPending}
             className={`w-full py-2 text-white rounded ${
-              loading ? "bg-green-600" : "bg-green-700 hover:bg-green-800"
+              verifyOtpMutation.isPending ? "bg-green-600" : "bg-green-700 hover:bg-green-800"
             }`}
           >
-            {loading ? "Verifying..." : "Verify OTP"}
+            {verifyOtpMutation.isPending ? "Verifying..." : "Verify OTP"}
           </Button>
         </form>
       </div>
     </div>
   );
 };
+
 export default OTPVerifyModal;

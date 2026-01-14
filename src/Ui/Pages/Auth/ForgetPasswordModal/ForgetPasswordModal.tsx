@@ -1,16 +1,18 @@
 import { useState } from "react";
-import { useForgetPassword } from "../../../../Hook/Auth/useForgetPassword";
+import { useForgetPassword } from "../../../../Hook/Auth/useAuth";
 import { toast } from "sonner";
-import { useNavigate, NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import OTPVerifyModal from "../OtpVerify/OTPVerifyModal";
+import ResetPasswordModal from "../ResetPasswordModal/ResetPasswordModal";
 
 export default function ForgetPasswordModal() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [step, setStep] = useState<'forget' | 'otp' | 'reset'>('forget');
   const forgetPasswordMutation = useForgetPassword();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,14 +32,22 @@ export default function ForgetPasswordModal() {
       const res = await forgetPasswordMutation.mutateAsync({ email });
       toast.success(res.message || "OTP sent");
 
-      // Navigate to reset password with email
-      navigate("/reset-password", { state: { email } });
+      // Show OTP verify modal
+      setStep('otp');
     } catch (err: String | any) {
       const errorMessage = err.message || "Failed to send OTP";
       setError(errorMessage);
       toast.error(errorMessage);
     }
   };
+
+  if (step === 'otp') {
+    return <OTPVerifyModal email={email} onClose={() => setStep('forget')} onVerified={() => setStep('reset')} />;
+  }
+
+  if (step === 'reset') {
+    return <ResetPasswordModal email={email} onClose={() => setStep('forget')} />;
+  }
 
   return (
     <>
