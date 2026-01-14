@@ -1,7 +1,8 @@
 import { useState } from "react";
-import axios from "../../../../Hook/api/axios"; // axios instance (withCredentials = true)
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../context/auth";
+import { useLogin } from "../../../../Hook/Auth/useLogin";
+import { toast } from "sonner";
 import {
   Card,
   CardHeader,
@@ -15,48 +16,74 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function Login() {
-  const [user, setUser] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const navigate = useNavigate();
   const { fetchUser } = useAuth();
+  const loginMutation = useLogin();
 
-  const handleInput = (e: { target: { name: any; value: any } }) => {
-    const name = e.target.name;
-    const value = e.target.value;
-    setUser({
-      ...user,
-      [name]: value,
-    });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
   };
-  const handleLogin = async (e: React.FormEvent) => {
+
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {};
+
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-    setMessage("");
+    setErrors({});
+
+    if (!validateForm()) return;
 
     try {
-      const res = await axios.post("/api/auth/login", {
-        email: user.email,
-        password: user.password,
-      });
-      setMessage(res.data.message || "OTP sent to your email");
-      setUser({ email: "", password: "" });
+      const res = await loginMutation.mutateAsync(formData);
+      toast.success(res.message || "Login successful");
+      setFormData({ email: "", password: "" });
       fetchUser();
       navigate("/dashboard");
     } catch (err: any) {
-      console.log(err)
-      setError(
-        err.message || "Registration failed. Try again."
-      );
-    } finally {
-      setLoading(false);
+      // Handle backend validation errors
+      if (err.message) {
+        toast.error(err.message);
+        // If it's a specific field error, show it on the field
+        if (err.message.toLowerCase().includes('email')) {
+          setErrors({ email: err.message });
+        } else if (err.message.toLowerCase().includes('password')) {
+          setErrors({ password: err.message });
+        }
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
     }
   };
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted px-4">
-      <Card className="w-full max-w-md shadow-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 px-4 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-200 to-green-200 rounded-full opacity-20 blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-green-200 to-blue-200 rounded-full opacity-20 blur-3xl"></div>
+      </div>
+
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-xl relative z-10">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl text-green-700 font-semibold">
             Login to Your Account
@@ -66,7 +93,7 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit}>
           <CardContent className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email">Email address</Label>
@@ -75,10 +102,12 @@ export default function Login() {
                 name="email"
                 type="email"
                 placeholder="name@domain.gov"
-                value={user.email}
-                onChange={handleInput}
-                required
+                value={formData.email}
+                onChange={handleInputChange}
               />
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -88,29 +117,22 @@ export default function Login() {
                 name="password"
                 type="password"
                 placeholder="Minimum 6 characters"
-                value={user.password}
-                onChange={handleInput}
-                required
-                minLength={6}
+                value={formData.password}
+                onChange={handleInputChange}
               />
+              {errors.password && (
+                <p className="text-sm text-red-600">{errors.password}</p>
+              )}
             </div>
-
-            {error && (
-              <p className="text-sm text-red-600 text-center">{error}</p>
-            )}
-
-            {message && (
-              <p className="text-sm text-green-600 text-center">{message}</p>
-            )}
           </CardContent>
 
           <CardFooter className="flex flex-col gap-3">
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loginMutation.isPending}
               className="w-full mt-4 bg-green-700 hover:bg-green-800 text-white"
             >
-              {loading ? "Login..." : "Login"}
+              {loginMutation.isPending ? "Logging in..." : "Login"}
             </Button>
 
             <div className="flex flex-col items-center gap-2">

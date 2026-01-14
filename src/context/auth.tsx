@@ -1,57 +1,27 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import axios from "../Hook/api/axios";
+import React, { createContext, useContext } from "react";
+import { useUser } from "../Hook/Auth/useUser";
+import { useLogout } from "../Hook/Auth/useLogout";
+
 const AuthContext = createContext<any>(null);
-const USER_URL = "/api/auth/user";
-const LOGOUT_URL = "/api/auth/logout";
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  // user state
-  const [user, setUser] = useState<any>(null);
+  const { data: user, isLoading, refetch: fetchUser } = useUser();
+  const logoutMutation = useLogout();
 
-  // loading state
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  // AUTH CHECK (COOKIE BASED)
-  const fetchUser = async () => {
-    try {
-      setIsLoading(true);
-      const response = await axios.get(USER_URL, {
-        withCredentials: true,
-      });
-      if (response.status === 200) {
-        setUser(response.data.userData);
-      } else {
-        setUser(undefined);
-      }
-    } catch (error) {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  //  LOGOUT
+  // LOGOUT
   const LogoutUser = async () => {
     try {
-      await axios.post(
-        `${LOGOUT_URL}`,
-        {},
-        {
-          withCredentials: true, //cookies send hongi
-        }
-      );
+      await logoutMutation.mutateAsync();
     } catch (error) {
       console.log("Logout error", error);
     } finally {
-      setUser(null);
+      // Invalidate user query or set to null
+      fetchUser();
     }
   };
 
   // LOGIN STATUS
   const isLoggedIn = !!user;
-  useEffect(() => {
-    fetchUser();
-  }, []);
 
   return (
     <AuthContext.Provider

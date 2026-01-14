@@ -1,7 +1,8 @@
 import { useState } from "react";
-import axios from "../../../../Hook/api/axios";
-import { useNavigate, Link, NavLink } from "react-router-dom";
-
+import { useNavigate, NavLink } from "react-router-dom";
+import { useSignup } from "../../../../Hook/Auth/useSignup";
+import { useVerifyOtp } from "../../../../Hook/Auth/useVerifyOtp";
+import { toast } from "sonner";
 import {
   Card,
   CardHeader,
@@ -13,69 +14,105 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 
 export default function Register() {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [otp, setOtp] = useState("");
   const [showOtpModal, setShowOtpModal] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string; otp?: string }>({});
 
-  const [loading, setLoading] = useState(false);
-  const [otpLoading, setOtpLoading] = useState(false);
+  const signupMutation = useSignup();
+  const verifyOtpMutation = useVerifyOtp();
 
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setUser({ ...user, [name]: value });
+    if (name === 'otp') {
+      setOtp(value);
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+    // Clear error when user starts typing
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
   };
 
-  const passwordRegex =
-    /^(?=(?:.*[A-Za-z]){2,})(?=(?:.*\d){2,})(?=(?:.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]){2,}).{6,}$/;
+  const validateSignupForm = () => {
+    const newErrors: { email?: string; password?: string } = {};
 
-  // REGISTER
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    } else if (!/(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(formData.password)) {
+      newErrors.password = "Password must contain letters, numbers & special characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateOtpForm = () => {
+    const newErrors: { otp?: string } = {};
+
+    if (!otp) {
+      newErrors.otp = "OTP is required";
+    } else if (otp.length !== 6) {
+      newErrors.otp = "OTP must be 6 digits";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setMessage("");
-    if (!passwordRegex.test(user.password)) {
-      toast("Password must contain letters, numbers & special character");
-      return;
-    }
+    setErrors({});
 
-    setLoading(true);
+    if (!validateSignupForm()) return;
+
     try {
-      const res = await axios.post("/api/auth/signup", user);
-
-      setMessage(res.data.message);
-      toast.success("Registration successful! OTP sent to email.");
-      setShowOtpModal(true); // Open OTP modal
+      const res = await signupMutation.mutateAsync(formData);
+      toast.success(res.message || "Registration successful! OTP sent to email.");
+      setShowOtpModal(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Registration failed");
-    } finally {
-      setLoading(false);
+      const errorMessage = err.message || "Registration failed";
+      toast.error(errorMessage);
+
+      // Handle specific backend errors
+      if (errorMessage.toLowerCase().includes('email')) {
+        setErrors({ email: errorMessage });
+      } else if (errorMessage.toLowerCase().includes('password')) {
+        setErrors({ password: errorMessage });
+      }
     }
   };
 
-  // OTP VERIFY
-  const handleVerifyOtp = async () => {
-    setOtpLoading(true);
-    setError("");
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    if (!validateOtpForm()) return;
 
     try {
-      await axios.post("/api/auth/verifyOtp", {
-        email: user.email,
+      await verifyOtpMutation.mutateAsync({
+        email: formData.email,
         otp,
       });
-      navigate("/login"); // redirect after verify
+      toast.success("OTP verified successfully!");
+      navigate("/login");
     } catch (err: any) {
-      setError(err.message || "Invalid OTP");
-      toast.error(err.message || "Invalid OTP");
-    } finally {
-      setOtpLoading(false);
+      const errorMessage = err.message || "Invalid OTP";
+      setErrors({ otp: errorMessage });
+      toast.error(errorMessage);
     }
   };
 
@@ -96,58 +133,55 @@ export default function Register() {
           <form onSubmit={handleRegister}>
             <CardContent className="space-y-5">
               <div className="space-y-2">
-                <Label>Email address</Label>
+                <Label htmlFor="email">Email address</Label>
                 <Input
+                  id="email"
                   name="email"
                   type="email"
                   placeholder="name@domain.gov"
-                  value={user.email}
-                  onChange={handleInput}
-                  required
+                  value={formData.email}
+                  onChange={handleInputChange}
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label>Password</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
+                  id="password"
                   name="password"
                   type="password"
                   placeholder="Minimum 6 characters"
-                  value={user.password}
-                  onChange={handleInput}
-                  required
-                  minLength={6}
+                  value={formData.password}
+                  onChange={handleInputChange}
                 />
+                {errors.password && (
+                  <p className="text-sm text-red-600">{errors.password}</p>
+                )}
               </div>
-
-              {error && (
-                <p className="text-sm text-red-600 text-center">{error}</p>
-              )}
-
-              {message && (
-                <p className="text-sm text-green-600 text-center">{message}</p>
-              )}
             </CardContent>
 
             <CardFooter className="flex flex-col gap-4">
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={signupMutation.isPending}
                 className="w-full mt-4 bg-green-700 hover:bg-green-800 text-white"
               >
-                {loading ? "Creating account..." : "Sign Up"}
+                {signupMutation.isPending ? "Creating account..." : "Sign Up"}
               </Button>
 
               <p className="text-sm text-muted-foreground">
                 OTP will be sent to your email
               </p>
 
-              <Link
+              <NavLink
                 to="/login"
                 className="text-sm text-green-700 hover:underline"
               >
                 Already have an account? Login
-              </Link>
+              </NavLink>
             </CardFooter>
           </form>
         </Card>
@@ -173,20 +207,21 @@ export default function Register() {
               className="mt-6 text-center tracking-widest text-lg"
               placeholder="******"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) => handleInputChange(e)}
               maxLength={6}
+              name="otp"
             />
 
-            {error && (
-              <p className="text-sm text-red-600 text-center mt-3">{error}</p>
+            {errors.otp && (
+              <p className="text-sm text-red-600 text-center mt-3">{errors.otp}</p>
             )}
 
             <Button
               onClick={handleVerifyOtp}
-              disabled={otpLoading}
+              disabled={verifyOtpMutation.isPending}
               className="w-full mt-6 bg-green-700 hover:bg-green-800 text-white"
             >
-              {otpLoading ? "Verifying..." : "Verify OTP"}
+              {verifyOtpMutation.isPending ? "Verifying..." : "Verify OTP"}
             </Button>
           </div>
         </div>

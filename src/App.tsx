@@ -10,11 +10,15 @@ import ProtectedRoute from "./context/Secure/ProctectedRoute";
 import DashboardRedirect from "./context/Secure/DashboradRedirect";
 import ForgetPasswordModal from "./Ui/Components/Auth/ForgetPasswordModal/ForgetPasswordModal";
 import ResetPassword from "./Ui/Components/Auth/ResetPassword/ResetPassword";
+import NOX from "./Ui/Pages/NOX/NOX";
+import Header from "./Ui/Components/Header/header";
 
 export const App = () => {
   const { isLoggedIn } = useAuth();
 
   return (
+    <>
+      {isLoggedIn && <Header />}
     <Routes>
       {/* PUBLIC */}
       <Route
@@ -30,9 +34,10 @@ export const App = () => {
 
       {/* USER */}
       <Route element={<ProtectedRoute role="user" />}>
-        <Route path="/dashboard/auth/user" element={<Analyst />} />
+        <Route path="/dashboard/auth/user" element={<Analyst />} >
+        <Route path="nox" element={<NOX />} />
+        </Route>
       </Route>
-
       {/* ADMIN */}
       <Route element={<ProtectedRoute role="admin" />}>
         <Route path="/dashboard/auth/admin" element={<AdminDashboard />} />
@@ -51,5 +56,6 @@ export const App = () => {
         }
       />
     </Routes>
+     </>
   );
 };
