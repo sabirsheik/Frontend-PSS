@@ -61,10 +61,8 @@ export default function Login() {
       fetchUser();
       navigate("/dashboard");
     } catch (err: String | any) {
-      // Handle backend validation errors
       if (err.message) {
         toast.error(err.message);
-        // If it's a specific field error, show it on the field
         if (err.message.toLowerCase().includes('email')) {
           setErrors({ email: err.message });
         } else if (err.message.toLowerCase().includes('password')) {
@@ -76,11 +74,11 @@ export default function Login() {
     }
   };
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-green-50 px-4 relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-200 to-green-200 rounded-full opacity-20 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-green-200 to-blue-200 rounded-full opacity-20 blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-linear-to-br from-blue-200 to-green-200 rounded-full opacity-20 blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-linear-to-br from-green-200 to-blue-200 rounded-full opacity-20 blur-3xl"></div>
       </div>
 
       <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-xl relative z-10">
@@ -156,4 +154,4 @@ export default function Login() {
       </Card>
     </div>
   );
-}
+};

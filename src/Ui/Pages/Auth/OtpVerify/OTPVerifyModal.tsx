@@ -14,7 +14,6 @@ const OTPVerifyModal = ({ email, onClose, onVerified }: Props) => {
   const [otp, setOtp] = useState("");
   const [timeLeft, setTimeLeft] = useState(300); 
   const [showReset, setShowReset] = useState(false); 
-
   const verifyOtpMutation = useVerifyOtp();
 
   // Countdown Timer
@@ -99,5 +98,4 @@ const OTPVerifyModal = ({ email, onClose, onVerified }: Props) => {
     </div>
   );
 };
-
 export default OTPVerifyModal;

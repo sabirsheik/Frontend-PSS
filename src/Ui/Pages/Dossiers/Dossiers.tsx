@@ -1,7 +1,7 @@
 export default function Dossiers() {
   return (
-    <div>
-      
-    </div>
+    <>
+      <h1>Dossiers</h1>
+    </>
   )
 }

@@ -2,7 +2,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import apiFetch from "../api/fetchApi";
 
 // Signup API Call
-
 interface SignupData {
   email: string;
   password: string;
@@ -22,7 +21,6 @@ export const useSignup = () => {
 
 
 // Login API Call
-
 interface LoginData {
   email: string;
   password: string;
@@ -39,8 +37,8 @@ export const useLogin = () => {
   });
 };
 
-// Forget Password API Call
 
+// Forget Password API Call
 interface ForgetPasswordData {
   email: string;
 }
@@ -58,7 +56,6 @@ export const useForgetPassword = () => {
 
 
 // Reset Password API Call
-
 interface ResetPasswordData {
   email: string;
   newPassword: string;
@@ -78,7 +75,6 @@ export const useResetPassword = () => {
 
 
 // Logout API Call
-
 export const useLogout = () => {
   return useMutation({
     mutationFn: async () => {
@@ -91,11 +87,10 @@ export const useLogout = () => {
 
 
 // Verify OTP API Call
-
 interface VerifyOtpData {
   email: string;
   otp: string;
-}
+};
 
 export const useVerifyOtp = () => {
   return useMutation({

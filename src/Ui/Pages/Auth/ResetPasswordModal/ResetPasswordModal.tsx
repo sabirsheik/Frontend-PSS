@@ -150,5 +150,4 @@ const ResetPasswordModal = ({ email, onClose }: Props) => {
     </div>
   );
 };
-
 export default ResetPasswordModal;

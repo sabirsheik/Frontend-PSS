@@ -8,7 +8,7 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
-    { to: "/links", label: "Links", icon: LinkIcon },
+    { to: "/dashboard/auth/user/link", label: "Links", icon: LinkIcon },
     { to: "/dashboard/auth/user/nox", label: "NOX", icon: FileText },
     { to: "/dashboard/auth/user/fiu", label: "FIU", icon: Database },
     { to: "/dashboard/auth/user/facial", label: "Facial", icon: Camera },
