@@ -1,4 +1,4 @@
-export default function NTOC() {
+export const NTOC = () => {
   return (
     <>
      <h1>NTOC</h1> 

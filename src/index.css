@@ -42,9 +42,15 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-baseColor: var(--baseColor);
+  --color-localColor: var(--localColor);
+  --color-hoverColor: var(--hoverColor);
 }
 
 :root {
+  --baseColor: #10823b;
+  --localColor: #000000;
+  --hoverColor: #0e6f2d;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

@@ -1,4 +1,4 @@
-export default function NOX() {
+export const  NOX = () => {
   return (
     <>
       <div>

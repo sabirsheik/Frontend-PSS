@@ -1,9 +1,19 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useUser, useLogout } from "../../../Hook/Auth/useAuth";
-import { Menu, X, Link as LinkIcon, FileText, Database, Camera, Search, File, Folder } from "lucide-react";
+import {
+  Menu,
+  X,
+  Link as LinkIcon,
+  FileText,
+  Database,
+  Camera,
+  Search,
+  File,
+  Folder,
+} from "lucide-react";
 
-const Header: React.FC = () => {
+export const Header: React.FC = () => {
   const { data: user, refetch: fetchUser } = useUser();
   const logoutMutation = useLogout();
   const isLoggedIn = !!user;
@@ -76,7 +86,11 @@ const Header: React.FC = () => {
       {isLoggedIn && (
         <nav className="bg-green-700 border-t border-green-600">
           <div className="container mx-auto px-4 py-2">
-            <ul className={`md:flex space-x-6 ${isMenuOpen ? 'block' : 'hidden'} md:block`}>
+            <ul
+              className={`md:flex space-x-6 ${
+                isMenuOpen ? "block" : "hidden"
+              } md:block`}
+            >
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 return (
@@ -105,5 +119,3 @@ const Header: React.FC = () => {
     </header>
   );
 };
-
-export default Header;
