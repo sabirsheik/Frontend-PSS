@@ -40,6 +40,9 @@ export const useLogin = () => {
         body: data,
       });
     },
+    onSuccess: () => {
+      localStorage.setItem("isLoggedIn", "true");
+    },
   });
 };
 
@@ -91,6 +94,9 @@ export const useLogout = () => {
         method: "POST",
       });
     },
+    onSuccess: () => {
+      localStorage.removeItem("isLoggedIn");
+    },
   });
 };
 
@@ -121,8 +127,12 @@ export const useUser = () => {
     queryKey: ["user"],
     queryFn: async () => {
       const data = await apiFetch("/api/auth/user");
+      if(data){
+        localStorage.removeItem("isLoggedIn");
+      }
       return data ? data.userData : null;
     },
+    enabled : !!localStorage.getItem("isLoggedIn"),
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
