@@ -21,10 +21,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 /**
  * Extended fetch options with body typing
- * Body can be any object that will be JSON serialized
+ * Body can be any object that will be JSON serialized or a BodyInit type
  */
 interface FetchOptions extends Omit<RequestInit, "body"> {
-  body?: object | FormData | null;
+  body?: BodyInit | Record<string, any> | null;
 }
 
 /**
@@ -83,6 +83,9 @@ const apiFetch = async <T = unknown>(
   // Construct full URL from base and endpoint
   const url = `${API_BASE_URL}${endpoint}`;
 
+  // Destructure body separately to handle it specially
+  const { body, ...restOptions } = options;
+
   // Build request configuration
   const config: RequestInit = {
     // Include cookies for authentication
@@ -94,13 +97,15 @@ const apiFetch = async <T = unknown>(
       ...options.headers,
     },
     
-    // Spread remaining options
-    ...options,
+    // Spread remaining options (excluding body)
+    ...restOptions,
   };
 
   // Serialize body if present and is an object
-  if (options.body && typeof options.body === "object" && !(options.body instanceof FormData)) {
-    config.body = JSON.stringify(options.body);
+  if (body && typeof body === "object" && !(body instanceof FormData)) {
+    config.body = JSON.stringify(body);
+  } else if (body) {
+    config.body = body as BodyInit;
   }
 
   try {

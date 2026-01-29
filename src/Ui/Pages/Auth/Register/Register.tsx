@@ -18,7 +18,7 @@
  */
 
 import { useState, useCallback, useMemo } from "react";
-import { useNavigate, NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -135,7 +135,6 @@ export const Register = () => {
   // ========================================
   // Hooks
   // ========================================
-  const navigate = useNavigate();
   const signupMutation = useSignup();
   const { results: passwordChecks, strength, isValid: isPasswordValid } = usePasswordStrength(formData.password);
 
@@ -229,15 +228,6 @@ export const Register = () => {
   const handleOtpModalClose = useCallback(() => {
     setShowOtpModal(false);
   }, []);
-
-  /**
-   * Handle successful OTP verification (for signup flow)
-   * Redirects to login page
-   */
-  const handleOtpSuccess = useCallback(() => {
-    setShowOtpModal(false);
-    navigate("/login");
-  }, [navigate]);
 
   // ========================================
   // Render Helpers
