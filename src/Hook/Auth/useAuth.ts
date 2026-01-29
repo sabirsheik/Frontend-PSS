@@ -1,117 +1,165 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+/**
+ * ============================================================
+ * Authentication Hooks (TanStack Query)
+ * ============================================================
+ * 
+ * Custom React hooks for authentication operations using TanStack Query.
+ * These hooks provide a clean, type-safe interface for all auth-related
+ * API calls with automatic caching, loading states, and error handling.
+ * 
+ * Why TanStack Query?
+ * - Automatic caching and background refetching
+ * - Built-in loading and error states
+ * - Optimistic updates capability
+ * - Request deduplication
+ * - Automatic retry on failure
+ * 
+ * @module Hook/Auth/useAuth
+ */
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiFetch from "../api/fetchApi";
 
-// Signup API Call
-// handle signup data
-interface SignupData {
+// ============================================================
+// Type Definitions
+// ============================================================
+
+/** User data returned from the API */
+export interface User {
+  _id: string;
+  email: string;
+  role: "user" | "admin" | "analyst";
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** API Response wrapper */
+interface AuthResponse {
+  message: string;
+}
+
+interface LoginResponse extends AuthResponse {
+  token?: string;
+}
+
+interface UserResponse {
+  success: boolean;
+  userData: User;
+}
+
+/** Input types for mutations */
+interface SignupInput {
   email: string;
   password: string;
 }
-// useSignup hook
-export const useSignup = () => {
-  // Return mutation for signup
-  return useMutation({
-    // Define mutation function
-    mutationFn: async (data: SignupData) => {
-      // Call signup API
-      return apiFetch("/api/auth/signup", {
-        method: "POST",
-        body: data,
-      });
-    },
-  });
-};
 
-// Login API Call
-// handle login data
-interface LoginData {
+interface LoginInput {
   email: string;
   password: string;
 }
-// useLogin hook
-export const useLogin = () => {
-  // Return mutation for login
-  return useMutation({
-    // Define mutation function
-    mutationFn: async (data: LoginData) => {
-      // Call login API
-      return apiFetch("/api/auth/login", {
-        method: "POST",
-        body: data,
-      });
-    },
-    onSuccess: () => {
-      localStorage.setItem("isLoggedIn", "true");
-    },
-  });
-};
 
-// Forget Password API Call
-interface ForgetPasswordData {
-  email: string;
-}
-// Forget Password API Call
-export const useForgetPassword = () => {
-  // Return mutation for forget password
-  return useMutation({
-    // Define mutation function
-    mutationFn: async (data: ForgetPasswordData) => {
-      // Call forget password API
-      return apiFetch("/api/auth/forget-password", {
-        method: "POST",
-        body: data,
-      });
-    },
-  });
-};
-
-// Reset Password API Call
-interface ResetPasswordData {
-  email: string;
-  newPassword: string;
-}
-// Reset Password API Call
-export const useResetPassword = () => {
-  // Return mutation for reset password
-  return useMutation({
-    // Define mutation function
-    mutationFn: async (data: ResetPasswordData) => {
-      return apiFetch("/api/auth/reset-password", {
-        method: "POST",
-        body: data,
-      });
-    },
-  });
-};
-
-// Logout API Call
-export const useLogout = () => {
-  // Return mutation for logout
-  return useMutation({
-    // Define mutation function
-    mutationFn: async () => {
-      return apiFetch("/api/auth/logout", {
-        method: "POST",
-      });
-    },
-    onSuccess: () => {
-      localStorage.removeItem("isLoggedIn");
-    },
-  });
-};
-
-// Verify OTP API Call
-interface VerifyOtpData {
+interface VerifyOtpInput {
   email: string;
   otp: string;
 }
-// Verify OTP API Call
-export const useVerifyOtp = () => {
-  // Return mutation for verify OTP
+
+interface ForgetPasswordInput {
+  email: string;
+}
+
+interface ResetPasswordInput {
+  email: string;
+  newPassword: string;
+}
+
+interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+// ============================================================
+// Query Keys
+// ============================================================
+
+/**
+ * Centralized query keys for cache management
+ * Using a factory pattern for consistent key generation
+ */
+export const authKeys = {
+  all: ["auth"] as const,
+  user: () => [...authKeys.all, "user"] as const,
+};
+
+// ============================================================
+// Authentication Queries
+// ============================================================
+
+/**
+ * Get Current User Hook
+ * 
+ * Fetches the currently authenticated user's data.
+ * Only runs when the user is logged in (has localStorage flag).
+ * 
+ * @returns TanStack Query result with user data
+ * 
+ * @example
+ * const { data: user, isLoading, isError } = useUser();
+ * 
+ * if (isLoading) return <LoadingSpinner />;
+ * if (user) return <Dashboard user={user} />;
+ * return <LoginPage />;
+ */
+export const useUser = () => {
+  return useQuery({
+    queryKey: authKeys.user(),
+    queryFn: async (): Promise<User | null> => {
+      const response = await apiFetch<UserResponse | null>("/api/auth/user");
+      
+      // Handle unauthenticated state
+      if (!response) {
+        localStorage.removeItem("isLoggedIn");
+        return null;
+      }
+      
+      return response.userData;
+    },
+    // Only fetch if user might be logged in
+    enabled: !!localStorage.getItem("isLoggedIn"),
+    // Don't retry on auth failures
+    retry: false,
+    // Keep data fresh for 5 minutes
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+// ============================================================
+// Authentication Mutations
+// ============================================================
+
+/**
+ * Signup Mutation Hook
+ * 
+ * Registers a new user account and triggers OTP email.
+ * 
+ * @returns TanStack Mutation for signup operation
+ * 
+ * @example
+ * const signupMutation = useSignup();
+ * 
+ * const handleSubmit = async (data) => {
+ *   try {
+ *     await signupMutation.mutateAsync(data);
+ *     toast.success("Check your email for OTP!");
+ *   } catch (error) {
+ *     toast.error(error.message);
+ *   }
+ * };
+ */
+export const useSignup = () => {
   return useMutation({
-    // Define mutation function
-    mutationFn: async (data: VerifyOtpData) => {
-      return apiFetch("/api/auth/verifyOtp", {
+    mutationFn: async (data: SignupInput): Promise<AuthResponse> => {
+      return apiFetch<AuthResponse>("/api/auth/signup", {
         method: "POST",
         body: data,
       });
@@ -119,21 +167,202 @@ export const useVerifyOtp = () => {
   });
 };
 
-// Get User Data API Call
-export const useUser = () => {
-  // Return query for user data
-  return useQuery({
-    // Define query function
-    queryKey: ["user"],
-    queryFn: async () => {
-      const data = await apiFetch("/api/auth/user");
-      if(data){
-        localStorage.removeItem("isLoggedIn");
-      }
-      return data ? data.userData : null;
+/**
+ * Login Mutation Hook
+ * 
+ * Authenticates user and establishes session.
+ * On success, sets localStorage flag and invalidates user query.
+ * 
+ * @returns TanStack Mutation for login operation
+ * 
+ * @example
+ * const loginMutation = useLogin();
+ * const { refetch: fetchUser } = useUser();
+ * 
+ * const handleLogin = async (credentials) => {
+ *   try {
+ *     await loginMutation.mutateAsync(credentials);
+ *     fetchUser(); // Refresh user data
+ *     navigate("/dashboard");
+ *   } catch (error) {
+ *     toast.error(error.message);
+ *   }
+ * };
+ */
+export const useLogin = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: LoginInput): Promise<LoginResponse> => {
+      return apiFetch<LoginResponse>("/api/auth/login", {
+        method: "POST",
+        body: data,
+      });
     },
-    enabled : !!localStorage.getItem("isLoggedIn"),
-    retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    onSuccess: () => {
+      // Mark user as logged in
+      localStorage.setItem("isLoggedIn", "true");
+      // Invalidate user query to trigger refetch
+      queryClient.invalidateQueries({ queryKey: authKeys.user() });
+    },
+  });
+};
+
+/**
+ * Verify OTP Mutation Hook
+ * 
+ * Verifies the OTP code for account activation or password reset.
+ * 
+ * @returns TanStack Mutation for OTP verification
+ * 
+ * @example
+ * const verifyOtpMutation = useVerifyOtp();
+ * 
+ * const handleVerify = async (email, otp) => {
+ *   try {
+ *     await verifyOtpMutation.mutateAsync({ email, otp });
+ *     toast.success("Account verified!");
+ *     navigate("/login");
+ *   } catch (error) {
+ *     toast.error(error.message);
+ *   }
+ * };
+ */
+export const useVerifyOtp = () => {
+  return useMutation({
+    mutationFn: async (data: VerifyOtpInput): Promise<AuthResponse> => {
+      return apiFetch<AuthResponse>("/api/auth/verifyOtp", {
+        method: "POST",
+        body: data,
+      });
+    },
+  });
+};
+
+/**
+ * Forget Password Mutation Hook
+ * 
+ * Initiates password reset flow by sending OTP to email.
+ * 
+ * @returns TanStack Mutation for password reset initiation
+ * 
+ * @example
+ * const forgetPasswordMutation = useForgetPassword();
+ * 
+ * const handleSubmit = async (email) => {
+ *   try {
+ *     await forgetPasswordMutation.mutateAsync({ email });
+ *     toast.success("OTP sent to your email!");
+ *     setShowOtpModal(true);
+ *   } catch (error) {
+ *     toast.error(error.message);
+ *   }
+ * };
+ */
+export const useForgetPassword = () => {
+  return useMutation({
+    mutationFn: async (data: ForgetPasswordInput): Promise<AuthResponse> => {
+      return apiFetch<AuthResponse>("/api/auth/forget-password", {
+        method: "POST",
+        body: data,
+      });
+    },
+  });
+};
+
+/**
+ * Reset Password Mutation Hook
+ * 
+ * Completes password reset after OTP verification.
+ * 
+ * @returns TanStack Mutation for password reset completion
+ * 
+ * @example
+ * const resetPasswordMutation = useResetPassword();
+ * 
+ * const handleReset = async (email, newPassword) => {
+ *   try {
+ *     await resetPasswordMutation.mutateAsync({ email, newPassword });
+ *     toast.success("Password reset successful!");
+ *     navigate("/login");
+ *   } catch (error) {
+ *     toast.error(error.message);
+ *   }
+ * };
+ */
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: async (data: ResetPasswordInput): Promise<AuthResponse> => {
+      return apiFetch<AuthResponse>("/api/auth/reset-password", {
+        method: "POST",
+        body: data,
+      });
+    },
+  });
+};
+
+/**
+ * Change Password Mutation Hook
+ * 
+ * Changes password for authenticated users.
+ * Requires current password verification.
+ * 
+ * @returns TanStack Mutation for password change
+ */
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: async (data: ChangePasswordInput): Promise<AuthResponse> => {
+      return apiFetch<AuthResponse>("/api/auth/change-password", {
+        method: "PUT",
+        body: data,
+      });
+    },
+  });
+};
+
+/**
+ * Logout Mutation Hook
+ * 
+ * Ends user session and clears authentication state.
+ * Clears localStorage and invalidates user query cache.
+ * 
+ * @returns TanStack Mutation for logout operation
+ * 
+ * @example
+ * const logoutMutation = useLogout();
+ * const { refetch: fetchUser } = useUser();
+ * 
+ * const handleLogout = async () => {
+ *   try {
+ *     await logoutMutation.mutateAsync();
+ *     fetchUser(); // Clear user data
+ *     navigate("/");
+ *   } catch (error) {
+ *     console.error("Logout failed:", error);
+ *   }
+ * };
+ */
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (): Promise<AuthResponse> => {
+      return apiFetch<AuthResponse>("/api/auth/logout", {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      // Clear login flag
+      localStorage.removeItem("isLoggedIn");
+      // Clear user data from cache
+      queryClient.setQueryData(authKeys.user(), null);
+      // Invalidate all auth-related queries
+      queryClient.invalidateQueries({ queryKey: authKeys.all });
+    },
+    onError: () => {
+      // Even on error, clear local state (server might have cleared session)
+      localStorage.removeItem("isLoggedIn");
+      queryClient.setQueryData(authKeys.user(), null);
+    },
   });
 };

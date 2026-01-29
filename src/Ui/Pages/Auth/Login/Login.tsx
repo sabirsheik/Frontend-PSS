@@ -1,9 +1,30 @@
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-// Hooks to handle user authentication
-import { useUser, useLogin } from "../../../../Hook/Auth/useAuth";
-import { toast } from "sonner";
+/**
+ * ============================================================
+ * Login Page Component
+ * ============================================================
+ * 
+ * Handles user authentication with email and password.
+ * Uses TanStack Query for API calls with automatic loading
+ * and error state management.
+ * 
+ * Features:
+ * - Form validation before submission
+ * - Loading state during authentication
+ * - Error display for failed attempts
+ * - Automatic redirect after successful login
+ * 
+ * @module Ui/Pages/Auth/Login
+ */
 
+import { useState, useCallback } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Loader2, Mail, Lock, LogIn } from "lucide-react";
+
+// TanStack Query hooks for authentication
+import { useUser, useLogin } from "../../../../Hook/Auth/useAuth";
+
+// UI Components
 import {
   Card,
   CardHeader,
@@ -12,133 +33,263 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-// Login Component
-export const Login = () => {
-  // State variables
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {}
-  );
-  const navigate = useNavigate();
-  // Hooks for user data and login mutation
-  const { refetch: fetchUser } = useUser();
-  const loginMutation = useLogin();
-  //  Handle input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Update form data state based on input changes
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
 
-    if (errors[name as keyof typeof errors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+// ============================================================
+// Type Definitions
+// ============================================================
+
+interface FormData {
+  email: string;
+  password: string;
+}
+
+interface FormErrors {
+  email?: string;
+  password?: string;
+}
+
+// ============================================================
+// Component
+// ============================================================
+
+/**
+ * Login Component
+ * 
+ * Renders a login form with email and password fields.
+ * Handles form validation, submission, and navigation.
+ */
+export const Login = () => {
+  // ========================================
+  // State
+  // ========================================
+  const [formData, setFormData] = useState<FormData>({
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  // ========================================
+  // Hooks
+  // ========================================
+  const navigate = useNavigate();
+  
+  // TanStack Query: Fetch user data after login
+  const { refetch: fetchUser } = useUser();
+  
+  // TanStack Query: Login mutation with loading/error states
+  const loginMutation = useLogin();
+
+  // ========================================
+  // Form Handlers
+  // ========================================
+  
+  /**
+   * Handle input field changes
+   * Updates form data and clears field-specific errors
+   */
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      
+      // Update form data
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      
+      // Clear error for the field being edited
+      if (errors[name as keyof FormErrors]) {
+        setErrors((prev) => ({ ...prev, [name]: undefined }));
+      }
+    },
+    [errors]
+  );
+
+  /**
+   * Validate form before submission
+   * Returns true if form is valid
+   */
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
     }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
-  // Handle form submission
+
+  /**
+   * Handle form submission
+   * Validates form, calls login API, and handles response
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
+
+    // Validate before submission
+    if (!validateForm()) return;
 
     try {
-      // Call login mutation
-      const res = await loginMutation.mutateAsync(formData);
-      // On success, show success message and fetch user data
-      toast.success(res.message || "Login successful");
-      // Fetch user data and navigate to dashboard
-      fetchUser();
+      // Call login mutation (TanStack Query handles loading state)
+      const response = await loginMutation.mutateAsync(formData);
+      
+      // Show success message
+      toast.success(response.message || "Welcome back!");
+      
+      // Fetch user data to update context
+      await fetchUser();
+      
+      // Navigate to dashboard
       navigate("/dashboard");
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+    } catch (error) {
+      // Error is automatically handled by TanStack Query
+      // Show error toast
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Login failed. Please try again.";
+      toast.error(errorMessage);
     }
   };
 
+  // ========================================
+  // Render
+  // ========================================
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-green-50 to-white px-4 relative overflow-hidden">
-      {/* Decorative background blobs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-linear-to-br from-purple-200 to-blue-200 rounded-full opacity-20 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-linear-to-br from-blue-200 to-purple-200 rounded-full opacity-20 blur-3xl"></div>
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-emerald-50 via-white to-teal-50 px-4 py-8 relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-linear-to-br from-emerald-200 to-teal-200 rounded-full opacity-20 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-linear-to-br from-teal-200 to-emerald-200 rounded-full opacity-20 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-linear-to-r from-emerald-100 to-teal-100 rounded-full opacity-10 blur-3xl" />
       </div>
 
       {/* Login Card */}
-      <Card className="w-full max-w-md shadow-2xl bg-white/80 backdrop-blur-xl border border-muted/40 relative z-10">
-        <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-2xl font-semibold text-baseColor">
+      <Card className="w-full max-w-md shadow-2xl bg-white/90 backdrop-blur-xl border border-emerald-100/50 relative z-10">
+        {/* Header */}
+        <CardHeader className="space-y-3 text-center pb-2">
+          {/* Logo/Icon */}
+          <div className="mx-auto w-16 h-16 bg-linear-to-br from-baseColor to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg mb-2">
+            <LogIn className="w-8 h-8 text-white" />
+          </div>
+          
+          <CardTitle className="text-2xl font-bold text-gray-800">
             Welcome Back
           </CardTitle>
-          <CardDescription className="text-sm">
-            Login using your registered email & password
+          <CardDescription className="text-gray-600">
+            Sign in to your account to continue
           </CardDescription>
         </CardHeader>
 
+        {/* Form */}
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {/* Email */}
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email address</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="name@domain.com"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
+          <CardContent className="space-y-5">
+            {/* Email Field */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-700 font-medium">
+                Email Address
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className={`pl-10 h-11 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                  disabled={loginMutation.isPending}
+                  autoComplete="email"
+                />
+              </div>
               {errors.email && (
-                <p className="text-xs text-red-600">{errors.email}</p>
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-600 rounded-full" />
+                  {errors.email}
+                </p>
               )}
             </div>
 
-            {/* Password */}
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleInputChange}
-              />
+            {/* Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-700 font-medium">
+                Password
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className={`pl-10 h-11 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                  disabled={loginMutation.isPending}
+                  autoComplete="current-password"
+                />
+              </div>
               {errors.password && (
-                <p className="text-xs text-red-600">{errors.password}</p>
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-600 rounded-full" />
+                  {errors.password}
+                </p>
               )}
             </div>
-          </CardContent>
 
-          <CardFooter className="flex flex-col gap-4 mt-4">
-            <Button
-              type="submit"
-              disabled={loginMutation.isPending}
-              className="w-full bg-baseColor hover:bg-hoverColor text-white"
-            >
-              {loginMutation.isPending ? "Logging in..." : "Login"}
-            </Button>
-
-            <Separator />
-
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Don&apos;t have an account?
-                <NavLink
-                  to="/register"
-                  className="ml-1 text-baseColor hover:underline"
-                >
-                  Register
-                </NavLink>
-              </p>
-
+            {/* Forgot Password Link */}
+            <div className="text-right">
               <NavLink
                 to="/forget-password"
-                className="text-sm text-baseColor hover:underline"
+                className="text-sm text-baseColor hover:text-hoverColor hover:underline transition-colors"
               >
                 Forgot password?
               </NavLink>
             </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col gap-5 pt-2">
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={loginMutation.isPending}
+              className="w-full h-11 bg-baseColor hover:bg-hoverColor text-white font-medium shadow-lg shadow-emerald-500/25 transition-all duration-200"
+            >
+              {loginMutation.isPending ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-5 h-5 mr-2" />
+                  Sign In
+                </>
+              )}
+            </Button>
+
+            <Separator className="my-1" />
+
+            {/* Register Link */}
+            <p className="text-center text-gray-600">
+              Don't have an account?{" "}
+              <NavLink
+                to="/register"
+                className="text-baseColor hover:text-hoverColor font-medium hover:underline transition-colors"
+              >
+                Create account
+              </NavLink>
+            </p>
           </CardFooter>
         </form>
       </Card>
