@@ -3,7 +3,7 @@
  * Application Header Component
  * ============================================================
  * 
- * Main navigation header for the PSS (Police Security System).
+ * Main navigation header for the PSS (Pakistan Surveillance Shield).
  * Displays the application logo, user info, navigation links,
  * and authentication controls.
  * 
@@ -169,7 +169,7 @@ export const Header: React.FC = () => {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold tracking-tight">PSS System</h1>
-                <p className="text-xs text-emerald-200/80">Police Security System</p>
+                <p className="text-xs text-emerald-200/80">Pakistan Surveillance Shield</p>
               </div>
             </NavLink>
           </div>
