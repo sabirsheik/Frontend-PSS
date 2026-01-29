@@ -209,8 +209,14 @@ export const Register = () => {
     // Validate form
     if (!validateForm()) return;
 
+    // Prepare data with trimmed and lowercased email
+    const signupData = {
+      email: formData.email.trim().toLowerCase(),
+      password: formData.password,
+    };
+
     // Submit signup request
-    signupMutation.mutate(formData, {
+    signupMutation.mutate(signupData, {
       onSuccess: (res) => {
         toast.success(res.message || "OTP sent to your email!");
         setShowOtpModal(true);

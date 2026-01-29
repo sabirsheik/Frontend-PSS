@@ -140,8 +140,14 @@ export const Login = () => {
     if (!validateForm()) return;
 
     try {
+      // Prepare data with trimmed and lowercased email
+      const loginData = {
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      };
+
       // Call login mutation (TanStack Query handles loading state)
-      const response = await loginMutation.mutateAsync(formData);
+      const response = await loginMutation.mutateAsync(loginData);
       
       // Show success message
       toast.success(response.message || "Welcome back!");

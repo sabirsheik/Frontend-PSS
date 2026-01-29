@@ -126,8 +126,11 @@ export const ForgetPasswordModal = () => {
     e.preventDefault();
     setError("");
 
+    // Trim and lowercase email
+    const trimmedEmail = email.trim().toLowerCase();
+
     // Validate email
-    if (!email.trim()) {
+    if (!trimmedEmail) {
       setError("Please enter your email address");
       return;
     }
@@ -142,9 +145,9 @@ export const ForgetPasswordModal = () => {
       return;
     }
 
-    // Submit forgot password request
+    // Submit forgot password request with trimmed/lowercased email
     forgetPasswordMutation.mutate(
-      { email },
+      { email: trimmedEmail },
       {
         onSuccess: (res) => {
           toast.success(res.message || "OTP sent to your email!");
