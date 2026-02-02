@@ -204,7 +204,7 @@ export const Login = () => {
             Welcome Back
           </CardTitle>
           <CardDescription className="text-gray-600">
-            Logging in to your account to continue
+            Log in to your account to continue
           </CardDescription>
         </CardHeader>
 
