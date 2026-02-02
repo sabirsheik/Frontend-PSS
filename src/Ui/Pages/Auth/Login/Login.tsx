@@ -20,7 +20,7 @@
 import { useState, useCallback } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2, Mail, Lock, LogIn } from "lucide-react";
+import { Loader2, Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
 
 // TanStack Query hooks for authentication
 import { useUser, useLogin } from "../../../../Hook/Auth/useAuth";
@@ -72,6 +72,7 @@ export const Login = () => {
     password: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
+   const [showPassword, setShowPassword] = useState(false);
 
   // ========================================
   // Hooks
@@ -83,6 +84,10 @@ export const Login = () => {
   
   // TanStack Query: Login mutation with loading/error states
   const loginMutation = useLogin();
+
+   const togglePasswordVisibility = useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
 
   // ========================================
   // Form Handlers
@@ -243,7 +248,7 @@ export const Login = () => {
                 <Input
                   id="password"
                   name="password"
-                  type="password"
+                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleInputChange}
@@ -251,6 +256,18 @@ export const Login = () => {
                   disabled={loginMutation.isPending}
                   autoComplete="current-password"
                 />
+                 <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
               </div>
               {errors.password && (
                 <p className="text-sm text-red-600 flex items-center gap-1">

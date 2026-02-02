@@ -15,7 +15,7 @@
  * @module Ui/Pages/Profile
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { toast } from "sonner";
 import {
   User,
@@ -25,10 +25,15 @@ import {
   Edit3,
   Check,
   X,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
 } from "lucide-react";
 
 // TanStack Query hooks
-import { useUser, useUpdateProfile } from "../../../Hook/Auth/useAuth";
+import { useUser, useUpdateProfile, useChangePassword } from "../../../Hook/Auth/useAuth";
 
 // UI Components
 import {
@@ -42,6 +47,60 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+// ============================================================
+// Password Validation Configuration
+// ============================================================
+
+/**
+ * Password strength requirements
+ * Each requirement has a pattern and label for display
+ */
+const PASSWORD_REQUIREMENTS = [
+  { key: "length", label: "At least 8 characters", pattern: /.{8,}/ },
+  { key: "letter", label: "Contains a letter", pattern: /[A-Za-z]/ },
+  { key: "number", label: "Contains a number", pattern: /\d/ },
+  { key: "special", label: "Contains a special character", pattern: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/ },
+] as const;
+
+// ============================================================
+// Custom Hook: usePasswordStrength
+// ============================================================
+
+/**
+ * Hook to calculate password strength based on requirements
+ */
+const usePasswordStrength = (password: string) => {
+  const results = useMemo(() => {
+    return PASSWORD_REQUIREMENTS.map((req) => ({
+      ...req,
+      met: req.pattern.test(password),
+    }));
+  }, [password]);
+
+  const strength = useMemo(() => {
+    const metCount = results.filter((r) => r.met).length;
+    if (metCount === 0) return { level: 0, label: "Too weak", color: "bg-gray-200" };
+    if (metCount === 1) return { level: 25, label: "Weak", color: "bg-red-500" };
+    if (metCount === 2) return { level: 50, label: "Fair", color: "bg-amber-500" };
+    if (metCount === 3) return { level: 75, label: "Good", color: "bg-emerald-400" };
+    return { level: 100, label: "Strong", color: "bg-emerald-600" };
+  }, [results]);
+
+  const isValid = useMemo(() => {
+    return results.every((r) => r.met);
+  }, [results]);
+
+  return { results, strength, isValid };
+};
 
 // ============================================================
 // Component
@@ -59,6 +118,7 @@ export const Profile = () => {
   // ========================================
   const { data: user } = useUser();
   const updateProfileMutation = useUpdateProfile();
+  const changePasswordMutation = useChangePassword();
 
   // ========================================
   // State
@@ -68,6 +128,25 @@ export const Profile = () => {
     username: "",
     email: "",
   });
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+  const [passwordTouched, setPasswordTouched] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+
+  // Password strength validation hook
+  const { results: passwordChecks, strength, isValid: isNewPasswordValid } = usePasswordStrength(passwordData.newPassword);
 
   // ========================================
   // Handlers
@@ -123,12 +202,114 @@ export const Profile = () => {
   }, []);
 
   /**
-   * Handle reset password button click
-   * Currently UI only - shows toast message
+   * Handle password input changes
    */
-  const handleResetPassword = useCallback(() => {
-    toast.info("Reset password functionality coming soon!");
+  const handlePasswordInputChange = useCallback((field: "currentPassword" | "newPassword" | "confirmPassword", value: string) => {
+    setPasswordData(prev => ({ ...prev, [field]: value }));
   }, []);
+
+  /**
+   * Handle password input blur for touched state
+   */
+  const handlePasswordBlur = useCallback((field: "current" | "new" | "confirm") => {
+    setPasswordTouched(prev => ({ ...prev, [field]: true }));
+  }, []);
+
+  /**
+   * Toggle password visibility
+   */
+  const togglePasswordVisibility = useCallback((field: "current" | "new" | "confirm") => {
+    setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
+  }, []);
+
+  /**
+   * Handle password change submission
+   */
+  const handleChangePassword = useCallback(async () => {
+    // Validation
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      toast.error("Please fill in all password fields");
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    if (!isNewPasswordValid) {
+      toast.error("New password does not meet all requirements");
+      return;
+    }
+
+    try {
+      await changePasswordMutation.mutateAsync({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+      toast.success("Password changed successfully!");
+      setIsPasswordModalOpen(false);
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordTouched({ current: false, new: false, confirm: false });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to change password");
+    }
+  }, [passwordData, isNewPasswordValid, changePasswordMutation]);
+
+  // ========================================
+  // Render Helpers
+  // ========================================
+
+  /**
+   * Render password strength indicator
+   */
+  const renderPasswordStrength = () => {
+    if (!passwordData.newPassword || !passwordTouched.new) return null;
+
+    return (
+      <div className="space-y-3 mt-3">
+        {/* Strength Bar */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs">
+            <span className="text-gray-500">Password strength</span>
+            <span className={`font-medium ${
+              strength.level === 100 ? "text-emerald-600" :
+              strength.level >= 75 ? "text-emerald-500" :
+              strength.level >= 50 ? "text-amber-500" :
+              "text-red-500"
+            }`}>
+              {strength.label}
+            </span>
+          </div>
+          <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className={`h-full transition-all duration-300 ${strength.color}`}
+              style={{ width: `${strength.level}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Requirements Checklist */}
+        <div className="grid grid-cols-2 gap-1.5">
+          {passwordChecks.map((check) => (
+            <div
+              key={check.key}
+              className={`flex items-center gap-1.5 text-xs ${
+                check.met ? "text-emerald-600" : "text-gray-400"
+              }`}
+            >
+              {check.met ? (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              ) : (
+                <XCircle className="w-3.5 h-3.5" />
+              )}
+              <span>{check.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   // ========================================
   // Render
@@ -268,18 +449,166 @@ export const Profile = () => {
             </h3>
 
             <div className="flex gap-4">
-              <Button
-                onClick={handleResetPassword}
-                variant="outline"
-                className="flex items-center gap-2 hover:bg-baseColor hover:text-white transition-colors"
-              >
-                <KeyRound className="w-4 h-4" />
-                Reset Password
-              </Button>
+              <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 hover:bg-baseColor hover:text-white transition-colors cursor-pointer"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    Change Password
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Change Password</DialogTitle>
+                    <DialogDescription>
+                      Enter your current password and choose a new one. Your new password must meet all security requirements.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-6 py-4">
+                    {/* Current Password */}
+                    <div className="grid gap-2">
+                      <Label htmlFor="current-password">Current Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="current-password"
+                          type={showPasswords.current ? "text" : "password"}
+                          value={passwordData.currentPassword}
+                          onChange={(e) => handlePasswordInputChange("currentPassword", e.target.value)}
+                          onBlur={() => handlePasswordBlur("current")}
+                          placeholder="Enter current password"
+                          className="h-11 pl-4 pr-12"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility("current")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showPasswords.current ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* New Password */}
+                    <div className="grid gap-2">
+                      <Label htmlFor="new-password">New Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="new-password"
+                          type={showPasswords.new ? "text" : "password"}
+                          value={passwordData.newPassword}
+                          onChange={(e) => handlePasswordInputChange("newPassword", e.target.value)}
+                          onBlur={() => handlePasswordBlur("new")}
+                          placeholder="Enter new password"
+                          className={`h-11 pl-4 pr-12 ${
+                            passwordTouched.new && !isNewPasswordValid && passwordData.newPassword
+                              ? "border-red-500 focus-visible:ring-red-500"
+                              : passwordTouched.new && isNewPasswordValid && passwordData.newPassword
+                              ? "border-emerald-500 focus-visible:ring-emerald-500"
+                              : ""
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility("new")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showPasswords.new ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                        {passwordTouched.new && passwordData.newPassword && isNewPasswordValid && (
+                          <CheckCircle2 className="absolute right-12 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                        )}
+                      </div>
+                      {passwordTouched.new && !isNewPasswordValid && passwordData.newPassword && (
+                        <p className="text-xs text-red-600 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          Password does not meet all requirements
+                        </p>
+                      )}
+                      
+                      {/* Password Strength Indicator */}
+                      {renderPasswordStrength()}
+                    </div>
+
+                    {/* Confirm New Password */}
+                    <div className="grid gap-2">
+                      <Label htmlFor="confirm-password">Confirm New Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="confirm-password"
+                          type={showPasswords.confirm ? "text" : "password"}
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => handlePasswordInputChange("confirmPassword", e.target.value)}
+                          onBlur={() => handlePasswordBlur("confirm")}
+                          placeholder="Confirm new password"
+                          className={`h-11 pl-4 pr-12 ${
+                            passwordTouched.confirm && passwordData.confirmPassword &&
+                            passwordData.newPassword !== passwordData.confirmPassword
+                              ? "border-red-500 focus-visible:ring-red-500"
+                              : passwordTouched.confirm && passwordData.confirmPassword &&
+                              passwordData.newPassword === passwordData.confirmPassword
+                              ? "border-emerald-500 focus-visible:ring-emerald-500"
+                              : ""
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility("confirm")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showPasswords.confirm ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                        {passwordTouched.confirm && passwordData.confirmPassword &&
+                         passwordData.newPassword === passwordData.confirmPassword && (
+                          <CheckCircle2 className="absolute right-12 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                        )}
+                      </div>
+                      {passwordTouched.confirm && passwordData.confirmPassword &&
+                       passwordData.newPassword !== passwordData.confirmPassword && (
+                        <p className="text-xs text-red-600 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          Passwords do not match
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsPasswordModalOpen(false)}
+                      disabled={changePasswordMutation.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleChangePassword}
+                      disabled={changePasswordMutation.isPending}
+                    >
+                      {changePasswordMutation.isPending ? "Changing..." : "Change Password"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             <p className="text-sm text-gray-500 mt-2">
-              Click the reset password button to change your account password.
+              Click the change password button to update your account password.
             </p>
           </div>
         </CardContent>
