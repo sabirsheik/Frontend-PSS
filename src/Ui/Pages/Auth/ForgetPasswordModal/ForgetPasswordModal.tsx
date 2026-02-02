@@ -3,13 +3,14 @@
  * Forgot Password Modal Component
  * ============================================================
  * 
- * Handles the password recovery flow. Users enter their email
- * to check if it exists in the database, then navigate to reset password page.
+ * Handles the password recovery flow. Users enter their username
+ * or email to check if it exists in the database, then navigate
+ * to reset password page.
  * 
  * Flow:
- * 1. User enters registered email
- * 2. Email existence checked in database
- * 3. Navigate to reset password page
+ * 1. User enters username or email
+ * 2. Account existence checked in database
+ * 3. Navigate to reset password page with user's email
  * 
  * @module Ui/Pages/Auth/ForgetPasswordModal
  */
@@ -59,7 +60,7 @@ export const ForgetPasswordModal = () => {
   // ========================================
   // State
   // ========================================
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [error, setError] = useState("");
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [touched, setTouched] = useState(false);
@@ -75,27 +76,33 @@ export const ForgetPasswordModal = () => {
   // ========================================
 
   /**
-   * Check if email is valid
+   * Check if identifier is valid (email or username)
    */
-  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isIdentifierValid = (() => {
+    if (!identifier.trim()) return false;
+    // Check if it's an email or a valid username
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+    const isUsername = /^[a-zA-Z0-9_]{3,30}$/.test(identifier);
+    return isEmail || isUsername;
+  })();
 
   // ========================================
   // Handlers
   // ========================================
 
   /**
-   * Handle email input change
+   * Handle identifier input change
    */
-  const handleEmailChange = useCallback(
+  const handleIdentifierChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setEmail(e.target.value);
+      setIdentifier(e.target.value);
       setError(""); // Clear error on input
     },
     []
   );
 
   /**
-   * Handle email input blur
+   * Handle identifier input blur
    */
   const handleBlur = useCallback(() => {
     setTouched(true);
@@ -115,32 +122,32 @@ export const ForgetPasswordModal = () => {
     e.preventDefault();
     setError("");
 
-    // Trim and lowercase email
-    const trimmedEmail = email.trim().toLowerCase();
+    // Trim identifier
+    const trimmedIdentifier = identifier.trim();
 
-    // Validate email
-    if (!trimmedEmail) {
-      setError("Please enter your email address");
+    // Validate identifier
+    if (!trimmedIdentifier) {
+      setError("Please enter your username or email address");
       return;
     }
 
-    if (!isEmailValid) {
-      setError("Please enter a valid email address");
+    if (!isIdentifierValid) {
+      setError("Please enter a valid username or email address");
       return;
     }
 
     if (!isConfirmed) {
-      setError("Please confirm that this email belongs to your account");
+      setError("Please confirm that this account belongs to you");
       return;
     }
 
-    // Submit forgot password request with trimmed/lowercased email
+    // Submit forgot password request with trimmed identifier
     forgetPasswordMutation.mutate(
-      { email: trimmedEmail },
+      { identifier: trimmedIdentifier },
       {
         onSuccess: (res) => {
-          toast.success(res.message || "Email verified successfully. Redirecting to password reset.");
-          navigate("/reset-password", { state: { email: trimmedEmail } });
+          toast.success(res.message || "Account verified successfully. Redirecting to password reset.");
+          navigate("/reset-password", { state: { email: res.email } });
         },
         onError: (err: Error) => {
           const errorMessage = err.message || "Failed to verify email. Please try again.";
@@ -189,7 +196,7 @@ export const ForgetPasswordModal = () => {
               Forgot Password?
             </CardTitle>
             <CardDescription className="text-gray-500">
-              Enter your email to verify your account
+              Enter your username or email to verify your account
             </CardDescription>
           </div>
         </CardHeader>
@@ -199,34 +206,34 @@ export const ForgetPasswordModal = () => {
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-5 pt-5">
-            {/* Email Field */}
+            {/* Identifier Field */}
             <div className="space-y-2">
               <Label
-                htmlFor="email"
+                htmlFor="identifier"
                 className="text-sm font-medium text-gray-700 flex items-center gap-2"
               >
                 <Mail className="w-4 h-4 text-gray-400" />
-                Email Address
+                Username or Email
               </Label>
               <div className="relative">
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="your.email@domain.com"
-                  value={email}
-                  onChange={handleEmailChange}
+                  id="identifier"
+                  type="text"
+                  placeholder="username or email@example.com"
+                  value={identifier}
+                  onChange={handleIdentifierChange}
                   onBlur={handleBlur}
                   disabled={forgetPasswordMutation.isPending}
-                  className={`h-11 pr-10 ${
+                  className={`h-11 pl-4 pr-4 ${
                     error
                       ? "border-red-500 focus-visible:ring-red-500"
-                      : touched && isEmailValid
+                      : touched && isIdentifierValid
                       ? "border-emerald-500 focus-visible:ring-emerald-500"
                       : ""
                   }`}
                 />
-                {touched && email && (
-                  isEmailValid ? (
+                {touched && identifier && (
+                  isIdentifierValid ? (
                     <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
                   ) : (
                     <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-red-500" />
@@ -253,14 +260,14 @@ export const ForgetPasswordModal = () => {
                 htmlFor="confirm"
                 className="text-sm text-gray-600 leading-snug cursor-pointer"
               >
-                I confirm this email belongs to my account and I have access to it
+                I confirm this account belongs to me and I have access to it
               </Label>
             </div>
 
             {/* Info Box */}
             <div className="p-3 bg-emerald-50/80 rounded-lg border border-emerald-100/50">
               <p className="text-xs text-emerald-700">
-                💡 Your email will be verified against our database.
+                💡 Your username or email will be verified against our database.
                 If valid, you'll be redirected to reset your password.
               </p>
             </div>
@@ -270,18 +277,18 @@ export const ForgetPasswordModal = () => {
             {/* Submit Button */}
             <Button
               type="submit"
-              disabled={forgetPasswordMutation.isPending || !email || !isConfirmed}
+              disabled={forgetPasswordMutation.isPending || !identifier || !isConfirmed}
               className="w-full h-11 bg-baseColor hover:bg-hoverColor text-white font-medium shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50"
             >
               {forgetPasswordMutation.isPending ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Verifying email...
+                  Verifying account...
                 </>
               ) : (
                 <>
                   <Send className="w-5 h-5 mr-2" />
-                  Verify Email
+                  Verify Account
                 </>
               )}
             </Button>

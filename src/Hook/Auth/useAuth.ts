@@ -44,6 +44,10 @@ interface LoginResponse extends AuthResponse {
   token?: string;
 }
 
+interface ForgetPasswordResponse extends AuthResponse {
+  email: string;
+}
+
 interface UserResponse {
   success: boolean;
   userData: User;
@@ -62,7 +66,7 @@ interface LoginInput {
 }
 
 interface ForgetPasswordInput {
-  email: string;
+  identifier: string;
 }
 
 interface ResetPasswordInput {
@@ -226,8 +230,8 @@ export const useLogin = () => {
  */
 export const useForgetPassword = () => {
   return useMutation({
-    mutationFn: async (data: ForgetPasswordInput): Promise<AuthResponse> => {
-      return apiFetch<AuthResponse>("/api/auth/forget-password", {
+    mutationFn: async (data: ForgetPasswordInput): Promise<ForgetPasswordResponse> => {
+      return apiFetch<ForgetPasswordResponse>("/api/auth/forget-password", {
         method: "POST",
         body: data,
       });
