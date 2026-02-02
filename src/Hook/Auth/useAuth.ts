@@ -59,11 +59,6 @@ interface LoginInput {
   password: string;
 }
 
-interface VerifyOtpInput {
-  email: string;
-  otp: string;
-}
-
 interface ForgetPasswordInput {
   email: string;
 }
@@ -140,7 +135,7 @@ export const useUser = () => {
 /**
  * Signup Mutation Hook
  * 
- * Registers a new user account and triggers OTP email.
+ * Registers a new user account.
  * 
  * @returns TanStack Mutation for signup operation
  * 
@@ -150,7 +145,7 @@ export const useUser = () => {
  * const handleSubmit = async (data) => {
  *   try {
  *     await signupMutation.mutateAsync(data);
- *     toast.success("Check your email for OTP!");
+ *     toast.success("Registration successful!");
  *   } catch (error) {
  *     toast.error(error.message);
  *   }
@@ -209,40 +204,9 @@ export const useLogin = () => {
 };
 
 /**
- * Verify OTP Mutation Hook
- * 
- * Verifies the OTP code for account activation or password reset.
- * 
- * @returns TanStack Mutation for OTP verification
- * 
- * @example
- * const verifyOtpMutation = useVerifyOtp();
- * 
- * const handleVerify = async (email, otp) => {
- *   try {
- *     await verifyOtpMutation.mutateAsync({ email, otp });
- *     toast.success("Account verified!");
- *     navigate("/login");
- *   } catch (error) {
- *     toast.error(error.message);
- *   }
- * };
- */
-export const useVerifyOtp = () => {
-  return useMutation({
-    mutationFn: async (data: VerifyOtpInput): Promise<AuthResponse> => {
-      return apiFetch<AuthResponse>("/api/auth/verifyOtp", {
-        method: "POST",
-        body: data,
-      });
-    },
-  });
-};
-
-/**
  * Forget Password Mutation Hook
  * 
- * Initiates password reset flow by sending OTP to email.
+ * Initiates password reset flow by sending reset link to email.
  * 
  * @returns TanStack Mutation for password reset initiation
  * 
@@ -252,8 +216,7 @@ export const useVerifyOtp = () => {
  * const handleSubmit = async (email) => {
  *   try {
  *     await forgetPasswordMutation.mutateAsync({ email });
- *     toast.success("OTP sent to your email!");
- *     setShowOtpModal(true);
+ *     toast.success("Reset link sent to your email!");
  *   } catch (error) {
  *     toast.error(error.message);
  *   }
@@ -273,7 +236,7 @@ export const useForgetPassword = () => {
 /**
  * Reset Password Mutation Hook
  * 
- * Completes password reset after OTP verification.
+ * Completes password reset.
  * 
  * @returns TanStack Mutation for password reset completion
  * 

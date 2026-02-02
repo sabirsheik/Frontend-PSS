@@ -4,21 +4,19 @@
  * ============================================================
  * 
  * Handles new user registration with email and password.
- * After successful signup, an OTP is sent to the user's email
- * for verification using the OTPVerifyModal component.
+ * After successful signup, user can directly log in.
  * 
  * Features:
  * - Email and password validation
  * - Password strength requirements
  * - TanStack Query for API calls
  * - Professional UI with gradients and animations
- * - Integration with OTPVerifyModal for verification
  * 
  * @module Ui/Pages/Auth/Register
  */
 
 import { useState, useCallback, useMemo } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -49,9 +47,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-
-// OTP Verification Modal (reused for signup verification)
-import { OTPVerifyModal } from "../OtpVerify/OTPVerifyModal";
 
 // ============================================================
 // Types
@@ -120,7 +115,7 @@ const usePasswordStrength = (password: string) => {
 /**
  * User Registration Component
  * 
- * Renders the registration form with validation and OTP verification
+ * Renders the registration form with validation
  */
 export const Register = () => {
   // ========================================
@@ -129,12 +124,12 @@ export const Register = () => {
   const [formData, setFormData] = useState<FormData>({ email: "", password: "" });
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
-  const [showOtpModal, setShowOtpModal] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   // ========================================
   // Hooks
   // ========================================
+  const navigate = useNavigate();
   const signupMutation = useSignup();
   const { results: passwordChecks, strength, isValid: isPasswordValid } = usePasswordStrength(formData.password);
 
@@ -212,22 +207,14 @@ export const Register = () => {
     // Submit signup request
     signupMutation.mutate(formData, {
       onSuccess: (res) => {
-        toast.success(res.message || "OTP sent to your email!");
-        setShowOtpModal(true);
+        toast.success(res.message || "Registration successful!");
+        navigate("/login");
       },
       onError: (err: Error) => {
         toast.error(err.message || "Registration failed. Please try again.");
       },
     });
   };
-
-  /**
-   * Handle OTP modal close
-   * Resets the modal state
-   */
-  const handleOtpModalClose = useCallback(() => {
-    setShowOtpModal(false);
-  }, []);
 
   // ========================================
   // Render Helpers
@@ -447,16 +434,6 @@ export const Register = () => {
           </form>
         </Card>
       </div>
-
-      {/* ================= OTP VERIFICATION MODAL ================= */}
-      {showOtpModal && (
-        <OTPVerifyModal
-          email={formData.email}
-          onClose={handleOtpModalClose}
-          redirectPath="/login"
-          purpose="signup"
-        />
-      )}
     </>
   );
 };

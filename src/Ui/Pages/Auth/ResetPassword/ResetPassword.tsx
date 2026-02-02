@@ -3,8 +3,8 @@
  * Reset Password Page Component
  * ============================================================
  * 
- * Allows users to set a new password after OTP verification.
- * Users arrive here from the OTPVerifyModal with their email
+ * Allows users to set a new password after receiving reset email.
+ * Users arrive here from the ForgetPasswordModal with their email
  * passed via location state.
  * 
  * Features:
@@ -136,7 +136,7 @@ export const ResetPassword = () => {
   const location = useLocation();
   const resetPasswordMutation = useResetPassword();
   
-  // Get email from location state (passed from OTP verification)
+  // Get email from location state (passed from password reset)
   const email = location.state?.email as string | undefined;
   
   // Password strength hook
