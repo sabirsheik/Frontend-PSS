@@ -157,6 +157,10 @@ const Link = lazy(() =>
   import("./Ui/Pages/Links/Link").then((m) => ({ default: m.Link }))
 );
 
+const Profile = lazy(() =>
+  import("./Ui/Pages/Profile/Profile").then((m) => ({ default: m.Profile }))
+);
+
 // ==============================
 //  COMPONENTS & CONTEXT
 // ==============================
@@ -202,6 +206,13 @@ export const App = () => {
               ROLE BASED REDIRECTION
              ============================== */}
           <Route path="/dashboard" element={<DashboardRedirect />} />
+
+          {/* ==============================
+              PROFILE PAGE (PROTECTED - ALL ROLES)
+             ============================== */}
+          <Route element={<ProtectedRoute role="user" />}>
+            <Route path="/dashboard/profile" element={<Profile />} />
+          </Route>
 
           {/* ==============================
               USER DASHBOARD (PROTECTED)

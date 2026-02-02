@@ -79,6 +79,16 @@ interface ChangePasswordInput {
   newPassword: string;
 }
 
+interface UpdateProfileInput {
+  username?: string;
+  email?: string;
+}
+
+interface UpdateProfileResponse {
+  success: boolean;
+  user: User;
+}
+
 // ============================================================
 // Query Keys
 // ============================================================
@@ -285,6 +295,48 @@ export const useChangePassword = () => {
         method: "PUT",
         body: data,
       });
+    },
+  });
+};
+
+/**
+ * Update Profile Mutation Hook
+ * 
+ * Updates the current user's profile information (username and/or email).
+ * 
+ * @returns TanStack Mutation for profile update operation
+ * 
+ * @example
+ * const updateProfileMutation = useUpdateProfile();
+ * const { data: user } = useUser();
+ * 
+ * const handleUpdateProfile = async (updates) => {
+ *   try {
+ *     await updateProfileMutation.mutateAsync({
+ *       id: user._id,
+ *       data: updates
+ *     });
+ *     toast.success("Profile updated successfully!");
+ *   } catch (error) {
+ *     toast.error(error.message);
+ *   }
+ * };
+ */
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateProfileInput }): Promise<UpdateProfileResponse> => {
+      return apiFetch<UpdateProfileResponse>(`/api/users/profile/${id}`, {
+        method: "PUT",
+        body: data,
+      });
+    },
+    onSuccess: (response) => {
+      // Update the user data in cache
+      queryClient.setQueryData(authKeys.user(), response.user);
+      // Invalidate user query to ensure consistency
+      queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
   });
 };

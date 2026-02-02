@@ -205,6 +205,14 @@ export const Header: React.FC = () => {
                           <p className="text-xs text-gray-500">Signed in as</p>
                           <p className="text-sm font-medium text-gray-800 truncate">{user.email}</p>
                         </div>
+                        <NavLink
+                          to="/dashboard/profile"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                        >
+                          <User className="w-4 h-4" />
+                          Profile
+                        </NavLink>
                         <button
                           onClick={handleLogout}
                           disabled={logoutMutation.isPending}
