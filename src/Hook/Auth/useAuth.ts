@@ -27,6 +27,7 @@ import apiFetch from "../api/fetchApi";
 /** User data returned from the API */
 export interface User {
   _id: string;
+  username: string;
   email: string;
   role: "user" | "admin" | "analyst";
   isVerified: boolean;
@@ -50,12 +51,13 @@ interface UserResponse {
 
 /** Input types for mutations */
 interface SignupInput {
+  username: string;
   email: string;
   password: string;
 }
 
 interface LoginInput {
-  email: string;
+  identifier: string;
   password: string;
 }
 

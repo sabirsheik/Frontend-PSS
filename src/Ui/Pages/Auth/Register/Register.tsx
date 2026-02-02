@@ -3,11 +3,12 @@
  * User Registration Page Component
  * ============================================================
  * 
- * Handles new user registration with email and password.
+ * Handles new user registration with username, email and password.
  * After successful signup, user can directly log in.
  * 
  * Features:
- * - Email and password validation
+ * - Username, email and password validation
+ * - Username uniqueness checking
  * - Password strength requirements
  * - TanStack Query for API calls
  * - Professional UI with gradients and animations
@@ -53,11 +54,13 @@ import { Separator } from "@/components/ui/separator";
 // ============================================================
 
 interface FormData {
+  username: string;
   email: string;
   password: string;
 }
 
 interface FormErrors {
+  username?: string;
   email?: string;
   password?: string;
 }
@@ -121,7 +124,7 @@ export const Register = () => {
   // ========================================
   // State
   // ========================================
-  const [formData, setFormData] = useState<FormData>({ email: "", password: "" });
+  const [formData, setFormData] = useState<FormData>({ username: "", email: "", password: "" });
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -176,6 +179,17 @@ export const Register = () => {
   const validateForm = useCallback((): boolean => {
     const newErrors: FormErrors = {};
 
+    // Username validation
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required";
+    } else if (formData.username.length < 3) {
+      newErrors.username = "Username must be at least 3 characters";
+    } else if (formData.username.length > 30) {
+      newErrors.username = "Username must be at most 30 characters";
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      newErrors.username = "Username can only contain letters, numbers, and underscores";
+    }
+
     // Email validation
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -204,8 +218,9 @@ export const Register = () => {
     // Validate form
     if (!validateForm()) return;
 
-    // Prepare data with trimmed and lowercased email
+    // Prepare data with trimmed and lowercased email and username
     const signupData = {
+      username: formData.username.trim().toLowerCase(),
       email: formData.email.trim().toLowerCase(),
       password: formData.password,
     };
@@ -312,6 +327,45 @@ export const Register = () => {
           {/* Form Section */}
           <form onSubmit={handleRegister}>
             <CardContent className="space-y-5 pt-4">
+              {/* Username Field */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="username"
+                  className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                >
+                  <UserPlus className="w-4 h-4 text-gray-400" />
+                  Username
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="username"
+                    name="username"
+                    type="text"
+                    placeholder="your_username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    disabled={signupMutation.isPending}
+                    className={`h-11 pl-4 pr-4 ${
+                      errors.username
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : touched.username && formData.username && !errors.username
+                        ? "border-emerald-500 focus-visible:ring-emerald-500"
+                        : ""
+                    }`}
+                  />
+                  {touched.username && formData.username && !errors.username && (
+                    <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                  )}
+                </div>
+                {errors.username && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {errors.username}
+                  </p>
+                )}
+              </div>
+
               {/* Email Field */}
               <div className="space-y-2">
                 <Label

@@ -4,18 +4,18 @@
  * ============================================================
  * 
  * Handles the password recovery flow. Users enter their email
- * to receive a reset link, then enter new password.
+ * to check if it exists in the database, then navigate to reset password page.
  * 
  * Flow:
  * 1. User enters registered email
- * 2. Reset link sent to email
- * 3. User enters new password
+ * 2. Email existence checked in database
+ * 3. Navigate to reset password page
  * 
  * @module Ui/Pages/Auth/ForgetPasswordModal
  */
 
 import { useState, useCallback } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -47,12 +47,6 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 
 // ============================================================
-// Types
-// ============================================================
-
-type FlowStep = "forget" | "reset";
-
-// ============================================================
 // Component
 // ============================================================
 
@@ -67,14 +61,13 @@ export const ForgetPasswordModal = () => {
   // ========================================
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-  const [step, setStep] = useState<FlowStep>("forget");
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [touched, setTouched] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
 
   // ========================================
   // Hooks
   // ========================================
+  const navigate = useNavigate();
   const forgetPasswordMutation = useForgetPassword();
 
   // ========================================
@@ -146,11 +139,11 @@ export const ForgetPasswordModal = () => {
       { email: trimmedEmail },
       {
         onSuccess: (res) => {
-          toast.success(res.message || "Reset link sent to your email!");
-          setStep("reset");
+          toast.success(res.message || "Email verified successfully. Redirecting to password reset.");
+          navigate("/reset-password", { state: { email: trimmedEmail } });
         },
         onError: (err: Error) => {
-          const errorMessage = err.message || "Failed to send reset email. Please try again.";
+          const errorMessage = err.message || "Failed to verify email. Please try again.";
           setError(errorMessage);
           toast.error(errorMessage);
         },
@@ -158,100 +151,9 @@ export const ForgetPasswordModal = () => {
     );
   };
 
-  /**
-   * Handle reset password
-   */
-  const handleReset = useCallback(() => {
-    if (!newPassword.trim()) {
-      setError("Please enter a new password");
-      return;
-    }
 
-    // Use resetPassword mutation
-    // Note: In a real app, you'd get a token from the email link
-    // For now, we'll use the email directly
-    // This is not secure, but for demo purposes
-    // In production, implement proper token-based reset
-  }, [newPassword]);
 
-  // ========================================
-  // Render: Reset Step
-  // ========================================
-  if (step === "reset") {
-    return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-        {/* Background decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 -right-20 w-60 h-60 bg-baseColor/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 -left-20 w-60 h-60 bg-emerald-300/10 rounded-full blur-3xl" />
-        </div>
 
-        {/* Main Card */}
-        <Card className="relative w-full max-w-md bg-white/95 backdrop-blur-xl shadow-2xl border border-emerald-100/50 animate-in fade-in zoom-in-95 duration-300">
-          {/* Close Button */}
-          <NavLink
-            to="/login"
-            className="absolute right-4 top-4 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </NavLink>
-
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
-              <KeyRound className="w-6 h-6 text-baseColor" />
-              Reset Password
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              Enter your new password for {email}
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="newPassword" className="text-sm font-medium">
-                New Password
-              </Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                className="h-11"
-              />
-            </div>
-
-            {error && (
-              <p className="text-sm text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {error}
-              </p>
-            )}
-          </CardContent>
-
-          <CardFooter className="flex flex-col gap-3 pt-2">
-            <Button
-              onClick={handleReset}
-              className="w-full h-11 bg-baseColor hover:bg-hoverColor text-white font-medium shadow-lg shadow-emerald-500/25"
-            >
-              <Send className="w-5 h-5 mr-2" />
-              Reset Password
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => setStep("forget")}
-              className="w-full h-10"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
 
   // ========================================
   // Render: Forgot Password Form
@@ -287,7 +189,7 @@ export const ForgetPasswordModal = () => {
               Forgot Password?
             </CardTitle>
             <CardDescription className="text-gray-500">
-              Enter your email to receive a verification code
+              Enter your email to verify your account
             </CardDescription>
           </div>
         </CardHeader>
@@ -358,8 +260,8 @@ export const ForgetPasswordModal = () => {
             {/* Info Box */}
             <div className="p-3 bg-emerald-50/80 rounded-lg border border-emerald-100/50">
               <p className="text-xs text-emerald-700">
-                💡 A 6-digit verification code will be sent to your email.
-                The code expires in 10 minutes.
+                💡 Your email will be verified against our database.
+                If valid, you'll be redirected to reset your password.
               </p>
             </div>
           </CardContent>
@@ -374,12 +276,12 @@ export const ForgetPasswordModal = () => {
               {forgetPasswordMutation.isPending ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Sending reset email...
+                  Verifying email...
                 </>
               ) : (
                 <>
                   <Send className="w-5 h-5 mr-2" />
-                  Send Verification Code
+                  Verify Email
                 </>
               )}
             </Button>

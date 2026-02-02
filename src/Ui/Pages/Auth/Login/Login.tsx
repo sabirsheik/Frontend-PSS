@@ -3,11 +3,12 @@
  * Login Page Component
  * ============================================================
  * 
- * Handles user authentication with email and password.
+ * Handles user authentication with username/email and password.
  * Uses TanStack Query for API calls with automatic loading
  * and error state management.
  * 
  * Features:
+ * - Single identifier field (username or email)
  * - Form validation before submission
  * - Loading state during authentication
  * - Error display for failed attempts
@@ -43,12 +44,12 @@ import { Separator } from "@/components/ui/separator";
 // ============================================================
 
 interface FormData {
-  email: string;
+  identifier: string;
   password: string;
 }
 
 interface FormErrors {
-  email?: string;
+  identifier?: string;
   password?: string;
 }
 
@@ -67,7 +68,7 @@ export const Login = () => {
   // State
   // ========================================
   const [formData, setFormData] = useState<FormData>({
-    email: "",
+    identifier: "",
     password: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -113,11 +114,17 @@ export const Login = () => {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Email validation
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+    // Identifier validation (email or username)
+    if (!formData.identifier.trim()) {
+      newErrors.identifier = "Username or email is required";
+    } else {
+      // Check if it's a valid email or username
+      const isEmail = /\S+@\S+\.\S+/.test(formData.identifier);
+      const isUsername = /^[a-zA-Z0-9_]{3,30}$/.test(formData.identifier);
+      
+      if (!isEmail && !isUsername) {
+        newErrors.identifier = "Please enter a valid username or email address";
+      }
     }
 
     // Password validation
@@ -140,9 +147,9 @@ export const Login = () => {
     if (!validateForm()) return;
 
     try {
-      // Prepare data with trimmed and lowercased email
+      // Prepare data with trimmed identifier
       const loginData = {
-        email: formData.email.trim().toLowerCase(),
+        identifier: formData.identifier.trim(),
         password: formData.password,
       };
 
@@ -199,29 +206,29 @@ export const Login = () => {
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-5">
-            {/* Email Field */}
+            {/* Identifier Field */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 font-medium">
-                Email Address
+              <Label htmlFor="identifier" className="text-gray-700 font-medium">
+                Username or Email
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={formData.email}
+                  id="identifier"
+                  name="identifier"
+                  type="text"
+                  placeholder="username or email@example.com"
+                  value={formData.identifier}
                   onChange={handleInputChange}
-                  className={`pl-10 h-11 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                  className={`pl-10 h-11 ${errors.identifier ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                   disabled={loginMutation.isPending}
-                  autoComplete="email"
+                  autoComplete="username"
                 />
               </div>
-              {errors.email && (
+              {errors.identifier && (
                 <p className="text-sm text-red-600 flex items-center gap-1">
                   <span className="inline-block w-1 h-1 bg-red-600 rounded-full" />
-                  {errors.email}
+                  {errors.identifier}
                 </p>
               )}
             </div>
