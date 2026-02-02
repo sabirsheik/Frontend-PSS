@@ -192,7 +192,7 @@ export const Header: React.FC = () => {
                       className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-all"
                     >
                       <User className="w-4 h-4" />
-                      <span className="text-sm font-medium max-w-32 truncate">
+                      <span className="text-sm font-medium max-w-32 truncate cursor-pointer">
                         {user.email}
                       </span>
                       <ChevronDown className={`w-4 h-4 transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />

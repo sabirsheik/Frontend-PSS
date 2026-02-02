@@ -487,7 +487,7 @@ export const Register = () => {
                   to="/login"
                   className="font-medium text-baseColor hover:text-hoverColor hover:underline transition-colors"
                 >
-                  Sign in
+                  Login here
                 </NavLink>
               </p>
             </CardFooter>

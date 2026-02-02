@@ -199,7 +199,7 @@ export const Login = () => {
             Welcome Back
           </CardTitle>
           <CardDescription className="text-gray-600">
-            Sign in to your account to continue
+            Logging in to your account to continue
           </CardDescription>
         </CardHeader>
 
@@ -281,12 +281,12 @@ export const Login = () => {
               {loginMutation.isPending ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Signing in...
+                  Logging in...
                 </>
               ) : (
                 <>
                   <LogIn className="w-5 h-5 mr-2" />
-                  Sign In
+                  Login In
                 </>
               )}
             </Button>
