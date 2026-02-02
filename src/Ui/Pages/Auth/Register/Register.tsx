@@ -458,7 +458,7 @@ export const Register = () => {
             </CardContent>
 
             {/* Footer Section */}
-            <CardFooter className="flex flex-col gap-4 pt-2">
+            <CardFooter className="flex flex-col gap-4 pt-2 mt-3">
               {/* Submit Button */}
               <Button
                 type="submit"

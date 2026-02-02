@@ -275,10 +275,8 @@ export const Login = () => {
                   {errors.password}
                 </p>
               )}
-            </div>
-
-            {/* Forgot Password Link */}
-            <div className="text-right">
+               {/* Forgot Password Link */}
+            <div className="text-left">
               <NavLink
                 to="/forget-password"
                 className="text-sm text-baseColor hover:text-hoverColor hover:underline transition-colors"
@@ -286,9 +284,12 @@ export const Login = () => {
                 Forgot password?
               </NavLink>
             </div>
+            </div>
+
+           
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-5 pt-2">
+          <CardFooter className="flex flex-col gap-5 pt-2 mt-2">
             {/* Submit Button */}
             <Button
               type="submit"
