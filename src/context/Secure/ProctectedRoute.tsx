@@ -13,7 +13,7 @@ const ProtectedRoute = ({ role }: { role: "user" | "admin" }) => {
     return <Navigate to="/" replace />;
   }
 //  If user role does not match, redirect to login Page
-  if (user?.role !== role && user?.role !== "admin") {
+  if (user?.role !== role && user?.role !== "admin" && user?.role !== "analyst") {
     return <Navigate to="/" replace />;
   }
 

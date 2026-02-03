@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Menu,
@@ -94,9 +94,11 @@ export const Header: React.FC = () => {
   // ========================================
   const { data: user, refetch: fetchUser } = useUser();
   const logoutMutation = useLogout();
+  const location = useLocation();
 
   // Derived state
   const isLoggedIn = !!user;
+  const profilePath = user?.role === "admin" ? "/dashboard/auth/admin/profile" : "/dashboard/auth/user/profile";
 
   // ========================================
   // Effects
@@ -118,6 +120,13 @@ export const Header: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  /**
+   * Close user dropdown when navigating
+   */
+  useEffect(() => {
+    setIsUserDropdownOpen(false);
+  }, [location.pathname]);
 
   // ========================================
   // Handlers
@@ -209,7 +218,7 @@ export const Header: React.FC = () => {
                   </span>
 
                   {/* User Dropdown */}
-                  <div className="relative">
+                  <div className="relative" ref={profileRef}>
                     <button
                       onClick={toggleUserDropdown}
                       className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-all"
@@ -229,8 +238,7 @@ export const Header: React.FC = () => {
                           <p className="text-sm font-medium text-gray-800 truncate">{user.email}</p>
                         </div>
                         <NavLink
-                          to="/dashboard/profile"
-                          onClick={() => setIsUserDropdownOpen(false)}
+                          to={profilePath}
                           className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                         >
                           <User className="w-4 h-4" />
@@ -239,7 +247,7 @@ export const Header: React.FC = () => {
                         <button
                           onClick={handleLogout}
                           disabled={logoutMutation.isPending}
-                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                          className="w-full px-4 py-2 text-left text-sm text-red-600 cursor-pointer hover:bg-red-50 flex items-center gap-2 transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
                           {logoutMutation.isPending ? "Logging out..." : "Logout"}
@@ -250,7 +258,7 @@ export const Header: React.FC = () => {
                 </div>
 
                 {/* User Info - Mobile */}
-                <div className="md:hidden relative" ref={profileRef}>
+                <div className="md:hidden relative">
                   <button
                     onClick={toggleUserDropdown}
                     className="flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-colors"
@@ -271,8 +279,7 @@ export const Header: React.FC = () => {
                         </span>
                       </div>
                       <NavLink
-                        to="/dashboard/profile"
-                        onClick={() => setIsUserDropdownOpen(false)}
+                        to={profilePath}
                         className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                       >
                         <User className="w-4 h-4" />
@@ -281,7 +288,7 @@ export const Header: React.FC = () => {
                       <button
                         onClick={handleLogout}
                         disabled={logoutMutation.isPending}
-                        className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                        className="w-full px-4 py-3 text-left text-sm text-red-600 cursor-pointer hover:bg-red-50 flex items-center gap-3 transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
                         {logoutMutation.isPending ? "Logging out..." : "Logout"}
